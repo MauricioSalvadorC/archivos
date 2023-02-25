@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnakeAutoPlaying</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        canvas{
+            /* border: 2px solid rgb(255, 255, 255); */
+            background-color: rgb(15, 11, 61);
+        }
+        
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        function foresInversa(i, n, thisNivel, niveles, iter=[]){
+            if(i<n && thisNivel<niveles){
+                iter[thisNivel]= i;
+
+                foresInversa(i+1, n, thisNivel, niveles, iter.slice());//iter.slice copia vector
+                
+                foresInversa(0, n, thisNivel+1, niveles, iter.slice());
+                if(thisNivel==niveles-1){
+                    let cad="";
+                    for(let j=0; j<niveles; j++) cad+= " "+iter[j];
+                    cad+="\n";
+                    console.log(cad);
+                }
+            }
+        }
+        function fores(n, niveles, i=0, thisNivel=0, iter=[]){
+            let cad="";
+            if(i<n && thisNivel<niveles){
+                iter[thisNivel]= i;
+                
+                if(thisNivel==niveles-1){
+                    for(let j=0; j<niveles; j++) cad+= " "+iter[j];
+                    cad+="\n";
+                }
+                cad+= fores(n, niveles, i+1, thisNivel, iter.slice());//iter.slice copia vector
+                
+                cad= fores(n, niveles, 0, thisNivel+1,  iter.slice()) + cad;
+                
+                return cad;
+            }
+            return cad;
+        }
+        console.log(fores(2, 3))
+        function foresFinal(n, niveles, code, vec, i=0, thisNivel=0, iter=[]){
+            let cad="";
+            
+            if(i<n && thisNivel<niveles){
+                iter[thisNivel]= i;
+                if(thisNivel==niveles-1){
+                    cad+= eval(code);
+                    cad+="\n";
+                }
+                cad+= foresFinal(n, niveles, code, vec, i+1, thisNivel, iter.slice());//iter.slice copia vector
+                
+                cad= foresFinal(n, niveles, code, vec, 0, thisNivel+1, iter.slice()) + cad;
+                
+                return cad;
+            }
+            return cad;
+        }
+        //console.log(foresFinal(3,3,"let a=''; for(let j=0; j<niveles; j++) a+= vec[iter[j]]; a",["a","b","c"]))
+        // //console.log(foresFinal(2,3,"let a=''; for(let j=0; j<niveles; j++) a+= vec[iter[j]]; a",["a","b","c"]))
+        // //console.log(foresFinal(3,2,"let a=''; for(let j=0; j<niveles; j++) a+= vec[iter[j]]; a",["a","b","c"]))
+        
+        // function foresCode(i, n, thisNivel, niveles, iter=[], code=""){
+        //     if(i<n && thisNivel<niveles){
+        //         iter[thisNivel]= i;
+                
+        //         if(thisNivel==niveles-1){
+        //             console.log(eval(code));
+        //         }
+        //         foresCode(i+1, n, thisNivel, niveles, iter.slice(), code);//iter.slice copia vector
+                
+        //         foresCode(0, n, thisNivel+1, niveles, iter.slice(), code);
+        //     }
+        // }
+
+        /////////////////////////////////////////////////////////////////////////////////////////
+        canvas=document.querySelector("#canvas");
+		ctx=canvas.getContext("2d");
+        canvas.width= window.innerWidth;
+        canvas.height= window.innerHeight;
+        
+        let margen= 20;
+        let filas= 11, colums= 16;
+        let pif= 0, pic=0, separa;
+        let m= crearMatriz(filas,colums,0);
+        let SonidoFondo= new Audio();
+        
+        canvas.addEventListener("mouseup",(evt)=>{
+            SonidoFondo.src= "KimetsuEd.mp3";
+            SonidoFondo.play();
+        }, false);
+        canvas.addEventListener("touchend",(evt)=>{
+            SonidoFondo.src= "KimetsuEd.mp3";
+            SonidoFondo.play();
+        }, false);
+        // SonidoFondo.volume=1;
+
+        if(canvas.width<canvas.height){//cell
+            let a= colums;
+            colums= filas;
+            filas= a;
+        }else{
+            margen= 100;
+        }
+
+        const WIDTH= canvas.width-margen, HEIGHT= canvas.height-margen;
+        if(filas<colums){
+            separa= WIDTH/colums;
+        }else{
+            separa= HEIGHT/filas;
+        }
+        if(filas*separa>HEIGHT){
+            separa= HEIGHT/filas;
+        }
+        if(colums*separa>WIDTH){
+            separa= WIDTH/colums;
+        }
+        pif= (WIDTH-colums*separa)/2+margen/2, pic= (HEIGHT-filas*separa)/2+margen/2;
+
+        
+      
+        let snake= [[parseInt(filas/2),parseInt(colums/2)]];
+        let comida;
+        function generarComida(){
+            comida= [random(0,filas-1),random(0,colums-1)];
+            if(snake.length==filas*colums){
+                comida= undefined;
+                return;
+            }
+            for(let i=0; i<snake.length; i++) if(snake[i][0]==comida[0] && snake[i][1]==comida[1]){
+                generarComida();
+                break;
+            }
+        }
+        generarComida();
+
+		let juego= setInterval(()=>{game()},30);
+        let copiaSnake, caminoComida, caminoCola, caminoColaComida;
+        function game(){
+            
+            canvas.width= canvas.width;
+            pintarLineasH();
+            pintarLineasV();
+            
+            pintarSnake();
+            
+            m= crearMatriz(filas,colums,0);
+            for(let i=0; i<snake.length; i++) m[snake[i][0]][snake[i][1]]=1;
+            if(comida!=undefined) caminoComida= caminoCorto(snake[snake.length-1][0], snake[snake.length-1][1], comida[0], comida[1], copiarMatriz(m));
+            else caminoComida= undefined;
+            caminoCola= caminoCorto(snake[snake.length-1][0], snake[snake.length-1][1], snake[0][0], snake[0][1], copiarMatriz(m));
+
+            // pintarCamino(caminoComida, "rgba(255,255,255,0.8)");
+            // console.log(caminoLargo(copiarVector(caminoComida), m));
+            // caminoComida= caminoLargo(caminoComida, copiarMatriz(m));
+            
+            
+            
+            // pintarCamino(caminoCola, "rgba(53,232,163,0.5)");
+            
+            if(caminoComida==undefined){
+                // copiaSnake= copiarMatriz(snake);
+                // for(let i=0; i<caminoComida.length; i++) copiaSnake.push(caminoComida[i]);
+                // copiaSnake.splice(0,caminoComida.length-1);
+                // m= crearMatriz(lado,lado,0);
+                // for(let i=0; i<copiaSnake.length; i++) m[copiaSnake[i][0]][copiaSnake[i][1]]=1;
+                // caminoCola= caminoCorto(copiaSnake[copiaSnake.length-1][0], copiaSnake[copiaSnake.length-1][1], copiaSnake[0][0], copiaSnake[0][1], m);
+                // moverSnake(caminoCola);
+                // pintarCamino(caminoCola);
+                caminoCola= caminoLargo(caminoCola, copiarMatriz(m));
+                if(caminoCola!=undefined && caminoCola.length==1){
+                    let caminoColaAux= caminoCorto(snake[snake.length-1][0], snake[snake.length-1][1], snake[1][0], snake[1][1], copiarMatriz(m));
+                    if(caminoColaAux!=undefined){
+                        console.log("en")
+                        copiaSnake= copiarMatriz(snake);
+                        copiaSnake.push(caminoColaAux[0]);
+                        copiaSnake.splice(0,1);
+                        // pintarCaminoCola(copiaSnake, "orange");
+                        m= crearMatriz(filas,colums,0);
+                        for(let i=0; i<copiaSnake.length; i++) m[copiaSnake[i][0]][copiaSnake[i][1]]=1;
+                        if(caminoCorto(copiaSnake[copiaSnake.length-1][0], copiaSnake[copiaSnake.length-1][1], copiaSnake[0][0], copiaSnake[0][1], m)!=undefined) caminoCola= caminoColaAux;
+                    }
+                }
+                pintarCaminoCola(caminoCola, 4, "rgba(248,255,127,1)");
+                moverSnake(caminoCola);
+            }else{ //hay camino
+                pintarCaminoComida(caminoComida, 1.8, "rgba(255,255,255,1)");
+                copiaSnake= copiarMatriz(snake);
+                for(let i=0; i<caminoComida.length; i++) copiaSnake.push(caminoComida[i]);
+                copiaSnake.splice(0,caminoComida.length-1);
+                
+                m= crearMatriz(filas,colums,0);
+                for(let i=0; i<copiaSnake.length; i++) m[copiaSnake[i][0]][copiaSnake[i][1]]=1;
+                caminoColaComida= caminoCorto(copiaSnake[copiaSnake.length-1][0], copiaSnake[copiaSnake.length-1][1], copiaSnake[0][0], copiaSnake[0][1], m);
+                // pintarCamino(caminoColaComida, "rgba(12,12,12,0.7)");
+                let isNextComidaLado= false;
+                if(comida!=undefined) isNextComidaLado= (comida[0]+1<filas && m[comida[0]+1][comida[1]]==0) 
+                    || (comida[1]+1<colums &&  m[comida[0]][comida[1]+1]==0) 
+                    || (comida[0]-1>=0 && m[comida[0]-1][comida[1]]==0) 
+                    || (comida[1]-1>=0 && m[comida[0]][comida[1]-1]==0);
+                if(caminoColaComida!=undefined || filas*colums-1==snake.length || (filas*colums-2==snake.length && isNextComidaLado)){
+                    // pintarCamino(caminoComida, "rgba(255,255,255,0.8)");
+                    moverSnake(caminoComida);
+                }else{//camino mas largo a la cola
+                    // pintarCamino(caminoCola, "rgba(53,232,163,0.5)");
+                    caminoCola= caminoLargo(caminoCola, copiarMatriz(m));
+                    pintarCaminoCola(caminoCola, 4, "rgba(248,255,127,1)");
+                    moverSnake(caminoCola);
+                }
+            }
+            // console.log("-------------------------");
+            // console.log(caminoComida);
+            // console.log(caminoCola);
+            // console.log(caminoColaComida);
+            //pinta comida
+            if(comida!=undefined) pintarRect(pif+comida[1]*separa+separa/4, pic+comida[0]*separa+separa/4, separa/2, separa/2, "red");
+            // for(let i=0; i<filas; i++){
+            //     for(let j=0; j<colums; j++){
+            //         pintarTexto(pic+i*separa+separa/3, pif+j*separa+separa/1.5, m[i][j]);
+            //     }
+            // } 
+            // pintarTexto(WIDTH/2, HEIGHT/2, snake);
+            // pintarTexto(WIDTH/2, HEIGHT/2+separa, copiaSnake);
+        }
+        ///mover snake
+        function moverSnake(camino){
+            if(camino!=undefined){
+                snake.push([camino[0][0],camino[0][1]]);
+                if(comida==undefined || camino[0][0]!=comida[0] || camino[0][1]!=comida[1]) snake.splice(0,1);
+                else generarComida();//si come debe volver a generar comida
+            }
+        }
+        ////////caminoLargo
+        function caminoLargo(camino, m){
+            if(camino==undefined) return undefined;
+            let n=[[snake[snake.length-1][0],snake[snake.length-1][1]]];
+            for(let j=0; j<camino.length; j++) n.push(camino[j]);
+            camino= n;
+            // console.log("-----------------")
+            // console.log(camino)
+            for(let i=0;i<camino.length-1; i++){
+                // console.log("entra")
+                m= crearMatriz(filas,colums,0);
+                for(let j=0; j<snake.length; j++) m[snake[j][0]][snake[j][1]]=1;
+                for(let j=0; j<camino.length; j++) m[camino[j][0]][camino[j][1]]=1;
+
+                if(camino[i][1] != camino[i+1][1]){
+                    let cami;
+                    if(camino[i+1][0]-1>=0 && m[camino[i+1][0]-1][camino[i+1][1]]!=1) cami= caminoCorto(camino[i][0], camino[i][1], camino[i+1][0]-1, camino[i+1][1], copiarMatriz(m));
+                    if(cami==undefined){
+                        if(camino[i+1][0]+1<filas && m[camino[i+1][0]+1][camino[i+1][1]]!=1) cami= caminoCorto(camino[i][0], camino[i][1], camino[i+1][0]+1, camino[i+1][1], copiarMatriz(m));
+                    }
+                    if(cami!=undefined){//existe camino
+                        let nuevoCamino= [];
+                        for(let j=0; j<=i; j++) nuevoCamino.push(camino[j]);
+                        for(let j=0; j<cami.length; j++) nuevoCamino.push(cami[j]);
+                        for(let j=i+1; j<camino.length; j++) nuevoCamino.push(camino[j]);
+                        camino= nuevoCamino;
+                        i= -1;
+                    }
+                }else{//camino[i][0] != camino[i+1][0]
+                    let cami;
+                    if(camino[i+1][1]-1>=0 && m[camino[i+1][0]][camino[i+1][1]-1]!=1) cami= caminoCorto(camino[i][0], camino[i][1], camino[i+1][0], camino[i+1][1]-1, copiarMatriz(m));
+                    if(cami==undefined){
+                        if(camino[i+1][1]+1<colums && m[camino[i+1][0]][camino[i+1][1]+1]!=1) cami= caminoCorto(camino[i][0], camino[i][1], camino[i+1][0], camino[i+1][1]+1, copiarMatriz(m));
+                    }
+                    if(cami!=undefined){//existe camino
+                        let nuevoCamino= [];
+                        for(let j=0; j<=i; j++) nuevoCamino.push(camino[j]);
+                        for(let j=0; j<cami.length; j++) nuevoCamino.push(cami[j]);
+                        for(let j=i+1; j<camino.length; j++) nuevoCamino.push(camino[j]);
+                        camino= nuevoCamino;
+                        i= -1;
+                    }
+                }
+            }
+            camino.shift();
+            return camino;
+        }
+        ////////generar camino a partir de los numeros 
+        function generarCamino(m, Ii, Ij, camino){
+            if(m[Ii][Ij]== 3){
+                return camino;
+            }
+            if(Ii-1>=0 && m[Ii-1][Ij]==m[Ii][Ij]-1){
+                camino.push([Ii-1,Ij]);
+                return generarCamino(m, Ii-1, Ij, camino);
+            }
+            if(Ij-1>=0 && m[Ii][Ij-1]==m[Ii][Ij]-1){
+                camino.push([Ii,Ij-1]);
+                return generarCamino(m, Ii, Ij-1, camino);
+            }
+            if(Ii+1<filas && m[Ii+1][Ij]==m[Ii][Ij]-1){
+                camino.push([Ii+1,Ij]);
+                return generarCamino(m, Ii+1, Ij, camino);
+            }
+            if(Ij+1<colums && m[Ii][Ij+1]==m[Ii][Ij]-1){
+                camino.push([Ii,Ij+1]);
+                return generarCamino(m, Ii, Ij+1, camino);
+            }
+            // let vec= vectorAleatorioSinRepetir(1,4);
+            // for(let k=0; k<4; k++){
+            //     if(vec[k]==1 && Ii-1>=0 && m[Ii-1][Ij]==m[Ii][Ij]-1){
+            //         camino.push([Ii-1,Ij]);
+            //         return generarCamino(m, Ii-1, Ij, camino);
+            //     }
+            //     if(vec[k]==2 && Ij-1>=0 && m[Ii][Ij-1]==m[Ii][Ij]-1){
+            //         camino.push([Ii,Ij-1]);
+            //         return generarCamino(m, Ii, Ij-1, camino);
+            //     }
+            //     if(vec[k]==3 && Ii+1<filas && m[Ii+1][Ij]==m[Ii][Ij]-1){
+            //         camino.push([Ii+1,Ij]);
+            //         return generarCamino(m, Ii+1, Ij, camino);
+            //     }
+            //     if(vec[k]==4 && Ij+1<colums && m[Ii][Ij+1]==m[Ii][Ij]-1){
+            //         camino.push([Ii,Ij+1]);
+            //         return generarCamino(m, Ii, Ij+1, camino);
+            //     }
+            // }
+        }
+
+        function caminoCorto(Ii,Ij,Fi,Fj,m) {
+            let cont= 2, modificado= true;
+            m[Ii][Ij]= cont;
+            m[Fi][Fj]= 0;
+
+            while(modificado){
+                modificado= false;
+                for(let i=0; i<filas; i++){
+                    for(let j=0; j<colums; j++){
+                        if(m[Fi][Fj]!=0){
+                            // console.log("entra "+i+" "+j);
+                            let camino=[];
+                            camino.push([Fi,Fj]);
+                            return invertirVector(generarCamino(m, Fi, Fj, camino));
+                        }
+                        
+                        if(m[i][j]==0 && i-1>=0 && m[i-1][j]==cont){
+                            m[i][j]= cont+1; modificado= true;
+                        }
+                        if(m[i][j]==0 && j-1>=0 && m[i][j-1]==cont){
+                            m[i][j]= cont+1; modificado= true;
+                        }
+                        if(m[i][j]==0 && i+1<filas && m[i+1][j]==cont){
+                            m[i][j]= cont+1; modificado= true;
+                        }
+                        if(m[i][j]==0 && j+1<colums && m[i][j+1]==cont){
+                            m[i][j]= cont+1; modificado= true;
+                        }
+                    }
+                } 
+                cont++;
+            }
+            return undefined;
+        }
+
+        function pintarLineasH() {
+            for(let i=0; i<=filas; i++){
+                pintarLinea(pif, pic+i*separa, pif+colums*separa, pic+i*separa)
+            }
+        }
+        function pintarLineasV() {
+            for(let i=0; i<=colums; i++){
+                pintarLinea(pif+i*separa, pic, pif+i*separa, pic+filas*separa)
+            }
+        }
+        function pintarLinea(x1,y1,x2,y2) {
+            ctx.lineWidth = 2;   // grosor de la linea
+            ctx.strokeStyle= "aqua";
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+        }
+        function pintarTexto(x,y,cad) {
+            ctx.beginPath() //iniciar ruta
+            ctx.strokeStyle="black"; //color externo
+            ctx.fillStyle="white"; //color de relleno
+            ctx.font="bold 10px arial"; //estilo de texto
+            ctx.strokeText(cad,x,y); //cad con método stroke
+            ctx.fillText(cad,x,y); //cad con método fill
+            // ctx.strokeText(cad,10,140); //cad con los dos métodos
+            // ctx.fillText(cad,10,140);
+        }
+        function pintarSnake(){
+            let color= "green", n=1.3;
+            let lado= separa/n;
+            let a= separa/2-lado/2;
+            for(let i=0; i<snake.length; i++){
+                if(i==snake.length-1) pintarRect(pif+snake[i][1]*separa+a, pic+snake[i][0]*separa+a, lado, lado, "#18DF00");
+                if(snake[i+1]){
+                    if(snake[i][1]<snake[i+1][1]) pintarRect(pif+snake[i][1]*separa+a, pic+snake[i][0]*separa+a, 2*separa-2*a, lado, color);
+                    if(snake[i][1]>snake[i+1][1]) pintarRect(pif+snake[i][1]*separa+a+lado, pic+snake[i][0]*separa+a, -(2*separa-2*a), lado, color);
+                    if(snake[i][0]<snake[i+1][0]) pintarRect(pif+snake[i][1]*separa+a, pic+snake[i][0]*separa+a, lado, (2*separa-2*a), color);
+                    if(snake[i][0]>snake[i+1][0]) pintarRect(pif+snake[i][1]*separa+a, pic+snake[i][0]*separa+a+lado, lado, -(2*separa-2*a), color);
+                }
+            }
+        }
+        function pintarCaminoComida(camino, n, color){
+            for(let i=0; camino!=undefined && i<camino.length; i++){
+                let lado= separa/n;
+                let a= separa/2-lado/2;
+                if(i==snake.length-1) pintarRect(pif+camino[i][1]*separa+a, pic+camino[i][0]*separa+a, lado, lado, color);
+                if(camino[i+1]){
+                    if(camino[i][1]<camino[i+1][1]) pintarRect(pif+camino[i][1]*separa+a, pic+camino[i][0]*separa+a, 2*separa-2*a, lado, color);
+                    if(camino[i][1]>camino[i+1][1]) pintarRect(pif+camino[i][1]*separa+a+lado, pic+camino[i][0]*separa+a, -(2*separa-2*a), lado, color);
+                    if(camino[i][0]<camino[i+1][0]) pintarRect(pif+camino[i][1]*separa+a, pic+camino[i][0]*separa+a, lado, (2*separa-2*a), color);
+                    if(camino[i][0]>camino[i+1][0]) pintarRect(pif+camino[i][1]*separa+a, pic+camino[i][0]*separa+a+lado, lado, -(2*separa-2*a), color);
+                }
+            }
+        }
+        function pintarCaminoCola(camino, n, color){
+            for(let i=0; camino!=undefined && i<camino.length; i++){
+                if(camino[i+1]){
+                    let lado= separa/n;
+                    let a= separa/2-lado/2;
+                    if(camino[i][1]<camino[i+1][1]) pintarRect(pif+camino[i][1]*separa+a, pic+camino[i][0]*separa+a, 2*separa-2*a, lado, color);
+                    if(camino[i][1]>camino[i+1][1]) pintarRect(pif+camino[i][1]*separa+a+lado, pic+camino[i][0]*separa+a, -(2*separa-2*a), lado, color);
+                    if(camino[i][0]<camino[i+1][0]) pintarRect(pif+camino[i][1]*separa+a, pic+camino[i][0]*separa+a, lado, (2*separa-2*a), color);
+                    if(camino[i][0]>camino[i+1][0]) pintarRect(pif+camino[i][1]*separa+a, pic+camino[i][0]*separa+a+lado, lado, -(2*separa-2*a), color);
+                }
+            }
+        }
+        function pintarRect(x1,y1,ancho,largo,c){
+            ctx.fillStyle= c;
+            ctx.fillRect(x1, y1, ancho, largo);
+
+            // ctx.strokeStyle= "black";
+            // if(canvas.width>700) ctx.lineWidth = 4;
+            // else ctx.lineWidth = 2;
+            // ctx.strokeRect(x1, y1, x2, y2);
+        }
+        /////////////////////////
+        function crearMatriz(filas,colums,valor){
+            let m=[];
+            for(let i=0; i<filas; i++) m[i]=[colums];
+            for(let i=0; i<filas; i++) for(let j=0; j<colums; j++) m[i][j]= valor;
+            // for(let i=0; i<filas; i++) for(let j=0; j<colums; j++) console.log(m[i][j]);
+            return m;
+        }
+        function vectorAleatorioSinRepetir(inicio, fin){
+            let v=[], n= fin-inicio+1, igual;
+            for(let i=0; i<n; i++){
+                do{
+                    igual= false;
+                    v[i]= random(inicio, fin);
+                    for(let j=0; j<i; j++){
+                        if(v[j]==v[i]){
+                            igual= true;
+                            break;
+                        }
+                    }
+                }while(igual);
+            }
+            return v;
+        }
+        function copiarVector(vec) {
+            if(vec!=undefined){
+                let auxm=[];
+                for(let i=0; i<vec.length; i++) auxm[i]= vec[i];
+                return auxm;
+            }
+        }
+        function invertirVector(vec) {
+            let aux;
+            if(vec!=undefined) for(let i=0; i<vec.length/2; i++){
+                aux= vec[i];
+                vec[i]= vec[vec.length-1-i];
+                vec[vec.length-1-i]= aux;
+            }
+            return vec;
+        }
+        function copiarMatriz(m) {
+            let auxm=[];
+            for(let i=0; i<m.length; i++){
+                auxm[i]= [m[i].length];
+                for(let j=0; j<m[i].length; j++) auxm[i][j]= m[i][j];
+            }
+            return auxm;
+        }
+        function random(min, max) {
+            // return Math.random() * (max - min) + min + 1;
+            return Math.round(Math.random() * (max - min) + min);
+        }
+    </script>
+
+</body>
+</html>

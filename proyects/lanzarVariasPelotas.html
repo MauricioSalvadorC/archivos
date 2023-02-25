@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>lanzamiento</title>
+	<style>
+		canvas{
+			display: block;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="canvas" width="700" height="550" style="border: solid #000;"></canvas>
+	ingrese angulo(0-90): <input type="text" id="angulo" placeholder="angulo 30">
+	ingrese velocidad: <input type="text" id="velocidad" placeholder="velocidad 100"><br>
+	<button onclick="lanzar()">lanzar</button>
+
+	<script type="text/javascript">
+		let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+
+		// ciclo infinito
+        let tumae = setInterval(()=>{ main()},1);
+        console.log("atan(-2)= "+Math.atan(2)*180/Math.PI);
+        console.log("asin(-2)= "+Math.asin(0.761577311)*180/Math.PI);
+
+		WIDTH= 700; HEIGHT=550;
+
+		class Bola{
+			constructor(x,y,r,vx,vy){
+				this.x= x;
+				this.y= y;
+				this.r= r;
+                this.vx= vx;
+                this.vy= vy;
+			}
+		}
+		class Linea{
+			constructor(x,y){
+				this.x= x;
+				this.y= y;
+			}
+		}
+		
+		//bolaColision= new Bola(300,270,50);
+		bolas= [new Bola(200,200,40,0.0001,0.00001)];
+		linea= new Linea(-5,0);
+        let gravedad= 9.8/1000;
+
+        function lanzar(){
+        	velocidad= Number(document.querySelector("#velocidad").value);
+        	angulo= Number(document.querySelector("#angulo").value);
+        	rad= Math.PI*angulo/180;
+
+        	hipotenusaLinea= 20;
+        	linea.x= Math.cos(rad)*hipotenusaLinea;
+        	linea.y= Math.sin(rad)*hipotenusaLinea;
+        	// console.log("velocidad= "+velocidad);
+        	// console.log("angulo= "+angulo);
+        	// console.log("rad= "+rad);
+            bolas.push(new Bola(1, 1, 5, Math.cos(rad)*velocidad/90, Math.sin(rad)*velocidad/90));
+            //bolas.splice(bolas.length-1,bolas.length-1);
+        	// vy= Math.sin(rad)*velocidad/100;
+        	// vx= Math.cos(rad)*velocidad/100;
+        	// console.log("vy= "+vy);
+        	// console.log("vx= "+vx+"\n---------------------------------");        	
+        }
+
+        function main(){
+        	canvas.width= canvas.width;
+        	//pintar circunferencia
+        	// h=100, k=120, r=50;
+        	// for (let x = h-r; x <= h+r; x+=0.01) {
+        	// 	ctx.beginPath();ctx.save();
+	        //     ctx.fillStyle = "#FF0000";  //color por dentro
+	        //     ctx.strokeStyle = "#FF0000";    // color prueba
+	        //     ctx.arc(x,Math.sqrt(r*r-(x-h)*(x-h))+k,0.2,0,2*Math.PI);
+	        //     ctx.arc(x,-Math.sqrt(r*r-(x-h)*(x-h))+k,0.2,0,2*Math.PI);
+	        //     ctx.fill();
+        	// }
+        	//pintar circunferencia
+    //     	h=70, k=70, r=40;
+    //     	for (let x = h-r; x <= h+r; x+=0.01) {
+    //     		ctx.strokeStyle= "#000000";
+		  //       ctx.lineWidth = 0.05;   // grosor de la linea
+				// ctx.beginPath();
+				// ctx.moveTo(x, Math.sqrt(r*r-(x-h)*(x-h))+k);
+		  //       ctx.lineTo(x, -Math.sqrt(r*r-(x-h)*(x-h))+k);
+		  //       ctx.stroke();
+    //     	}
+   			ctx.strokeStyle= "#000000";
+	        ctx.lineWidth = 10;   // grosor de la linea
+			ctx.beginPath();
+			ctx.moveTo(0, HEIGHT);
+	        ctx.lineTo(linea.x, planoC(linea.y));
+	        ctx.stroke();
+			// console.log("vx= "+vx);
+			// console.log("vy= "+vy+"\n--------------------------------");
+            for (var i = 0; i < bolas.length; i++) {
+                bola= bolas[i];
+                pintarBola(bola);
+                bola.vy-= gravedad;
+                bola.x+= bola.vx;
+                bola.y+= bola.vy;
+                if(bola.y <= 0){
+                    bola.y-= bola.vy;
+                    bola.vy= -bola.vy;//1.1;
+                    bola.vx= bola.vx;//1.1;
+                }
+                if(bola.x >= WIDTH || bola.x <= 0){
+                    bola.x-= bola.vx;
+                    bola.vx= -bola.vx;//1.1;
+                    bola.vy= bola.vy;//1.1;
+                }
+                //console.log("----entra----");                
+                for (var j = 0; j < bolas.length; j++){
+                    if(j!=i){
+                        if(bola.x >= bolas[j].x-bolas[j].r && bola.x <= bolas[j].x+bolas[j].r){
+                            let Cy= Math.sqrt( Math.pow(bolas[j].r,2)-Math.pow(bola.x-bolas[j].x,2));
+                            if(bola.y <= Cy+bolas[j].y && bola.y >= bolas[j].y){//colision con la parte de arriba
+                                let derivada= -(bola.x-bolas[j].x)/Cy;
+                                reboteEsfera(derivada,bola);
+                                reboteEsfera(derivada,bolas[j]);
+                            }else if(bola.y >= -Cy+bolas[j].y && bola.y <= bolas[j].y){//colision con la parte de arriba
+                                let derivada= (bola.x-bolas[j].x)/Cy;
+                                reboteEsfera(derivada,bola);
+                                reboteEsfera(derivada,bolas[j]);
+                            }
+                        }
+                    }
+                } 
+            }
+        }
+
+        function reboteEsfera(Dx, bola){
+            let vx= bola.vx, vy= bola.vy;
+            let y1= Dx*(1-bola.x)+bola.y;
+            let y2= Dx*(2-bola.x)+bola.y;
+            let angRecta= ToAngulo( Math.atan(y2-y1) );
+
+            let angBola= ToAngulo( Math.atan(bola.vy/bola.vx) );
+            let vt= Math.sqrt(Math.pow(bola.vx,2)+Math.pow(bola.vy,2));
+
+            if(vx>0){
+                if(vy>0){
+                    bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+                    bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+                }else{
+                    bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+                    bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+                }
+            }else{
+                if(vy>0){
+                    bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+                    bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+                }else{
+                    if(y2>y1){//pendiente positiva
+                        bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+                        bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+                    }else{
+                        bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+                        bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+                    }
+                }
+            }
+        }
+
+        function pintarBola(bola) {
+            ctx.beginPath();ctx.save();
+            ctx.fillStyle = "#FF0000";  //color por dentro
+            ctx.strokeStyle = "#FF0000";    // color prueba
+            ctx.arc(bola.x, planoC(bola.y), bola.r, 0, 2*Math.PI);
+            ctx.fill();
+        }
+
+        function ToAngulo(rad){
+        	return rad*180/Math.PI;
+        }
+
+        function ToRad(angulo){
+            return angulo*Math.PI/180;
+        }
+
+        function valorAbs(x){
+        	if(x<0) return -x;
+        	return x;
+        }
+
+        function planoC(y){
+        	return HEIGHT-y;
+        }
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>interseccion rectangulos</title>
+	<style>
+        *{
+                box-sizing: border-box;   
+        }
+		canvas{
+			display: inline-block;
+		}
+        #arriba{
+            display: flex;
+            flex-flow: row wrap;      
+            margin: 0px 0px;
+            padding: 3px;
+        }
+        div{
+            display: inline-block;
+            margin: 1px 0px;
+            padding: 3px;   
+        }
+        button{
+            display: block;
+        }
+        section{
+            display: inline-block;
+            width: 300px;
+            height: 300px;
+        }
+
+	</style>
+</head>
+<body>
+	<div id="arriba">  
+        <canvas id="canvas" width="700" height="500" style="border: solid #000;"></canvas>
+        <section id="rectC" style="border: solid green" width="400" height="500">
+            
+        </section>
+    </div>  
+    <div style="border: solid blue">   
+        ingrese datos punto A <br>                  
+        ingrese x: <input type="text" id="Ax" placeholder=""> <br>
+        ingrese y: <input type="text" id="Ay" placeholder=""> <br>
+        ingrese ancho: <input type="text" id="Aa" placeholder=""> <br>
+        ingrese largo: <input type="text" id="Al" placeholder=""> <br>
+    </div>
+    <div style="border: solid red">   
+        ingrese datos punto B <br>                  
+        ingrese x: <input type="text" id="Bx" placeholder=""> <br>
+        ingrese y: <input type="text" id="By" placeholder=""> <br>
+        ingrese ancho: <input type="text" id="Ba" placeholder=""> <br>
+        ingrese largo: <input type="text" id="Bl" placeholder=""> <br>
+    </div>
+	<button onclick="pintar()">pintar</button>
+
+	<script type="text/javascript">
+		let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+
+		// ciclo infinito
+		WIDTH= 700; HEIGHT=500;
+
+        function pintar(){
+            canvas.width= canvas.width;
+            A= [], B= [];
+            A.push(Number(document.querySelector("#Ax").value), Number(document.querySelector("#Ay").value), 
+                Number(document.querySelector("#Aa").value), Number(document.querySelector("#Al").value));
+            B.push(Number(document.querySelector("#Bx").value), Number(document.querySelector("#By").value), 
+                Number(document.querySelector("#Ba").value), Number(document.querySelector("#Bl").value));
+
+            ctx.strokeStyle= "blue";
+            ctx.strokeRect(A[0], planoC(A[1]), A[2], A[3]);
+            
+            ctx.strokeStyle= "red";
+            ctx.strokeRect(B[0], planoC(B[1]), B[2], B[3]);
+
+            let C= interseccion(A, B);
+            ctx.fillStyle= "green"; 
+            ctx.fillRect(C[0], planoC(C[1]), C[2], C[3]);
+
+            document.querySelector("#rectC").innerHTML= "Datos C: "+
+            "<br>"+"x: "+C[0]+
+            "<br>"+"y:"+C[1]+
+            "<br>"+"Ancho: "+C[2]+
+            "<br>"+"Largo: "+C[3]+
+            "<br>";     
+        }
+
+		function interseccion(A, B){
+            let C= [];
+            for(let i=0; i<4; i++) C[i]= 0;
+            
+            for (var i = 0; i < 2; i++) {
+                if(A[0]<=B[0] && A[0]+A[2]>=B[0]){//A.x < B.x y A.x+ancho>B.x
+                    if(A[1]<=B[1] && B[1]-B[3]<=A[1]){//A.y < B.y y  B.y-largo<A.y
+                        C[0]= B[0];
+                        C[1]= A[1];
+                        
+                        if(A[0]+A[2]>=B[0]+B[2]) C[2]= B[2];
+                        if(A[0]+A[2]<=B[0]+B[2]) C[2]= A[2]-(B[0]-A[0]);
+                        
+                        if(B[1]-B[3]>=A[1]-A[3]) C[3]= B[3]-(B[1]-A[1]); //B.y-largo > A.y-largo
+                        if(B[1]-B[3]<=A[1]-A[3]) C[3]= A[3]; //B.y-largo < A.y-largo
+                    }
+                    if(B[1]<=A[1] && A[1]-A[3]<=B[1]){ //A.y > B.y
+                        C[0]= B[0];
+                        C[1]= B[1];
+                        
+                        if(A[0]+A[2]>=B[0]+B[2]) C[2]= B[2];
+                        if(A[0]+A[2]<=B[0]+B[2]) C[2]= A[2]-(B[0]-A[0]);
+                        
+                        if(B[1]-B[3]>=A[1]-A[3]) C[3]= B[3]; //B.y-largo > A.y-largo
+                        if(B[1]-B[3]<=A[1]-A[3]) C[3]= A[3]-(A[1]-B[1]); //B.y-largo < A.y-largo
+                    }
+                }
+                let aux= A;
+                A= B;
+                B= aux;
+            }
+            return C;
+        }
+
+        function cambiarValor(A, B) {
+            let aux= A;
+            A= B;
+            B= aux;
+        }
+        
+        function ToAngulo(rad){
+        	return rad*180/Math.PI;
+        }
+
+        function ToRad(angulo){
+            return angulo*Math.PI/180;
+        }
+
+        function valorAbs(x){
+        	if(x<0) return -x;
+        	return x;
+        }
+
+        function planoC(y){
+        	return HEIGHT-y;
+        }
+	</script>
+</body>
+</html>

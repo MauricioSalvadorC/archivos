@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>	
+    		canvas{
+    			display: block;
+    		}
+    </style>	
+</head>	
+<body>
+    <canvas id="canvas" width="550" height="550" style="border:solid rgb(0, 0, 0)"></canvas>
+    <div>ingrese coordenadas(ej:0,0): <input type="text" id="C1"></div>
+    <div>ingrese coordenadas(ej:3,3): <input type="text" id="C2"></div>
+   	<button onclick="trazarCamino()">trazar</button>
+
+    <script>
+
+        let canvas=document.querySelector("#canvas");
+		let ctx=canvas.getContext("2d");
+
+        // ciclo infinito
+        //let tumae = setInterval(()=>{ move()},30) 
+        let x=200,y=50;
+
+        let arr = [];
+        for(let x=0; x<4; x++){
+            arr[x] = [];
+            for(let y=0; y<4; y++){
+                arr[x][y] = (y+1)+4*x;
+                ctx.font="bold 20px sans-serif"; // estilo de letra
+                //ctx.fillText(""+arr[x][y],y+100*y+20,(x+100*x)+100);
+                ctx.strokeRect(y+100*y,(x+100*x)+40,100,100);
+            }
+        }
+
+        //laberinto
+        let m= ["L1L1L1L1L",
+        		"102020201",
+        		"L1L2L2L2L",
+        		"102010101",
+        		"L2L1L2L1L",
+        		"101020201",
+        		"L2L2L1L1L",
+        		"101020201",
+        		"L1L1L1L1L"];
+        for(let x=0; x<5; x++){
+            for(let y=0; y<4; y++){
+                if(m[2*x][2*y+1]==1){
+			        ctx.lineWidth = 3;   // grosor de la linea
+			        ctx.strokeStyle= "#FF0040";
+					ctx.beginPath();
+					ctx.moveTo(y+100*y,(x+100*x)+40);
+			        ctx.lineTo(y+100*y+100, (x+100*x)+40);
+			        ctx.stroke();
+                }
+            }
+        }
+        for(let x=0; x<4; x++){
+            for(let y=0; y<5; y++){
+                if(m[2*x+1][2*y]==1){
+			        ctx.lineWidth = 3;   // grosor de la linea
+			        ctx.strokeStyle= "#FF0040";
+					ctx.beginPath();
+					ctx.moveTo(y+100*y,(x+100*x)+40);
+			        ctx.lineTo(y+100*y, (x+100*x)+40+100);
+			        ctx.stroke();
+                }
+            }
+        }			
+       
+        function split(cad, char){
+        	let vec= [];
+        	let a= "";
+        	for (let i = 0; i < cad.length; i++) {
+        		if(cad[i]==char || i == cad.length-1){
+	        			if(i == cad.length-1 && cad[i]!=char) a+=cad[i];
+	        			vec.push(a);
+	        			a="";
+        		}
+        		else a+=cad[i];
+        		
+        	}
+        	return vec;
+        }
+        function subString(cad,i,limit){
+        	if(i==limit) return cad[i];
+        	return cad[i] + subString(cad,i+1,limit);
+        }
+        function isMismoCamino(py,px,camino){
+        	vec= split(camino, "-");
+        	for (var i = 0; i <  vec.length; i++) {
+        		let punto= split(vec[i],",");
+        		if(py==parseInt(punto[0],10) && px==parseInt(punto[1],10)) return true;
+        	}
+        	return false;
+        }
+
+        let posiblesCaminos= [];
+        function trazarCamino(){
+        	posiblesCaminos= [];
+        	
+	 		let coordenadas1 = split(document.querySelector("#C1").value,",");
+	 		let coordenadas2 = split(document.querySelector("#C2").value,",");
+	 		caminoPuntoApunto(m,  2*parseInt(coordenadas1[0],10)+1,  2*parseInt(coordenadas1[1],10)+1,  
+	 			2*parseInt(coordenadas2[0],10)+1, 2*parseInt(coordenadas2[1],10)+1,"");
+
+	 		console.log(posiblesCaminos);
+	 		let indiceMenor=0, valorMenor=99; 
+	 		for (var i = 0; i < posiblesCaminos.length; i++) {
+	 			if(posiblesCaminos[i].length < valorMenor){
+	 				indiceMenor= i;
+	 				valorMenor= posiblesCaminos[i].length;
+	 			}
+	 		}
+
+	 		let caminoCorto= posiblesCaminos[indiceMenor];
+	 		ctx.fillText("camino: "+caminoCorto,20,500);
+	 		let vectorPuntos= split(caminoCorto,"-");
+	 		let pA= split(vectorPuntos[0],",");
+			let yA= (parseInt(pA[0],10)-1)/2;
+			let xA= (parseInt(pA[1],10-1)/2);
+
+	 		for (var i = 1; i < vectorPuntos.length; i++) {
+	 			let p= split(vectorPuntos[i],",");
+	 			let y= (parseInt(p[0],10)-1)/2;
+	 			let x= (parseInt(p[1],10-1)/2);
+	 			ctx.lineWidth = 3;   // grosor de la linea
+		        ctx.strokeStyle= "#0000FF";
+				ctx.beginPath();
+				ctx.moveTo((xA+100*xA),yA+100*yA+90);
+		        ctx.lineTo((x+100*x),y+100*y+90);
+		        ctx.stroke();
+		        yA= y; xA=x;
+	 		}
+        }
+
+        function caminoPuntoApunto(m, py, px, fy, fx, camino){
+        	if(py==fy && px==fx){
+        		posiblesCaminos.push(camino+fy+","+fx);
+        		return;
+        	}
+        	if(m[py][px+1]==2){
+        		if(!isMismoCamino(py,px+2,camino)) caminoPuntoApunto(m,py,px+2,fy,fx,camino+py+","+px+"-");
+        	}
+        	if(m[py+1][px]==2){
+        		if(!isMismoCamino(py+2,px,camino)) caminoPuntoApunto(m,py+2,px,fy,fx,camino+py+","+px+"-");
+        	}
+        	if(m[py-1][px]==2){
+        		if(!isMismoCamino(py-2,px,camino)) caminoPuntoApunto(m,py-2,px,fy,fx,camino+py+","+px+"-");
+        	}
+        	if(m[py][px-1]==2){
+        		if(!isMismoCamino(py,px-2,camino)) caminoPuntoApunto(m,py,px-2,fy,fx,camino+py+","+px+"-");
+        	}
+        }
+        // dibujar cuadrados
+        //ctx.fillRect(25,25,100,100); // cuadrado relleno
+        //ctx.clearRect(45,45,60,60);  // crea un cuadrado 
+        //ctx.strokeRect(50,50,50,50);
+
+        //dibujaralgo();
+
+        function dibujaralgo(){
+            for(let x=0; x<100; x++){
+                for(let y=0; y<100; y++){
+                    pintar(x,y);
+                }
+            }
+        }
+
+        function move(){    
+
+            x+=2;
+            y+=2.7;
+
+            pintar(x,y);
+        }
+
+        function pintar(x,y){
+            // limpiar canvas
+		    canvas.width=canvas.width;
+
+            // dibujar circulos 
+            ctx.beginPath();ctx.save();
+            ctx.fillStyle = "#FF0000";  //color por dentro
+            ctx.strokeStyle = "#FF0000";    // color prueba
+            ctx.arc(x,y,5,0,2*Math.PI);
+            ctx.fill();
+        }
+
+        // dibujar circulos 
+        // ctx.beginPath();
+        // ctx.save();
+        // ctx.fillStyle = "#FF0000";  //color por dentro
+        // ctx.strokeStyle = "#FF0000";    // color prueba
+        // ctx.arc(x,y,1,0,2*Math.PI);
+        // ctx.fill();
+
+        // limpiar canvas
+		//canvas.width=canvas.width;
+
+        // dibujar imagen
+        // var img = new Image();
+        // img.src = "img/pinball2.png";
+        // ctx.drawImage(img, 0, 0);
+
+        // dibujar linea
+  //       ctx.strokeStyle= "#FF0000";
+  //       ctx.lineWidth = 3;   // grosor de la linea
+		// ctx.strokeStyle = "#f00";
+		// ctx.beginPath();
+		// ctx.moveTo(x1, y1);
+  //       ctx.lineTo(x2, x2);
+  //       ctx.stroke();
+
+        // dibujar palabra
+        //ctx.font="bold 30px sans-serif"; // estilo de letra
+        //ctx.fillText("escribe",x,y);
+
+        //------------------------- eventos -------------------------------------
+		document.addEventListener("keypress",(e)=>{
+			if(e.keyCode==97){ // izquierda tecla A
+				//clearInterval(tumae);
+				x-=4;
+   				pintar(x,y);
+			}
+			if(e.keyCode==100){	// derecha tecla D
+				x+=4;
+   				pintar(x,y);
+			}
+            if(e.keyCode==119){	// arriba tecla W
+                y-=4;
+   				pintar(x,y);
+			}
+			if(e.keyCode==115){ // abajo tecla S
+				y+=4;
+   				pintar(x,y);
+			}
+		})
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TumaexD</title>
+</head>
+<body>
+    <style>
+        body {
+            box-sizing: border-box;
+            background: linear-gradient(#10e2f1, #013a7a);
+        }
+
+        .container{
+            background: white;
+            font-size: 30px;
+            display: block;
+            width: 400px;
+            max-height: 605px;
+            text-align: center;
+            margin: 0 auto;
+        }
+    
+        canvas {
+            box-shadow: 10px -8px 2px -5px rgba(65, 65, 65, 0.75);
+        }
+
+        h1 {
+            margin: 0;
+            padding: 5px 0px;
+        }
+    </style>
+    <div class="container" style="background: none;">
+        <h1>PinBall</h1>
+    </div>
+    <div class="container">
+        <canvas id="canvas" width="400" height="600" style="border:solid rgb(0, 0, 0)"></canvas>
+    </div>
+    <script>
+        let canvas=document.querySelector("#canvas");
+		let ctx=canvas.getContext("2d");
+
+        class Linea{
+            constructor(p1,p2){
+                this.p1=p1;
+                this.p2=p2;
+                if(p1[0] == p2[0] || p1[1] == p2[1]){
+                    this.m= null; 
+                }else{
+                    this.m=(p2[1]-p1[1])/(p2[0]-p1[0]); 
+                }
+                if(p1[1] < p2[1]){
+                    this.ym = (Math.abs(p1[1]-p2[1])/2)+p1[1];
+                }
+                else{
+                    this.ym = (Math.abs(p1[1]-p2[1])/2)+p2[1];  
+                }
+                if(p1[0] < p2[0]){
+                    this.xm = (Math.abs(p1[0]-p2[0])/2)+p1[0];
+                }
+                else{
+                    this.xm = (Math.abs(p1[0]-p2[0])/2)+p2[0];  
+                }
+                //console.log("linea---y1: "+p1[1]+" y2: "+p2[1]+"  ym:"+this.ym);
+            }
+        }
+
+        class Curva{
+            constructor(p1,p2,p_r){
+                this.p1=p1;
+                this.p2=p2;
+                this.p_r=p_r;
+            }
+        }
+
+        class Bola{
+			constructor(x,y,velx,vely,r){
+				this.x=x;
+				this.y=y;
+                this.velx=velx;
+				this.vely=vely;
+                this.r=r;
+                this.m=0;
+			}
+		}
+
+        let mapa = [];  // vector con objetos del mapa
+        let canH = canvas.height, canW = canvas.width; 
+        
+
+        let empj = -0.0001;  // empuje pruebas
+        let grav = 0.0048;  // GRAVEDAD
+        let ball = new Bola(340,65,-0.005,0.000001,2); // bola
+        
+
+        let whC = 4; // grozor de lineas colisiones
+        let distOpt = 100; // tolerancia de colisiones
+
+        //-----------------------------------------------
+        // - mapa de pruebas -
+        // mapa.push(new Linea([0,600],[400,600]));
+        // mapa.push(new Linea([0,0],[0,600]));
+        // mapa.push(new Linea([400,0],[400,600]));
+
+        // mapa.push(new Linea([170,400],[350,400]));
+        // mapa.push(new Linea([270,300],[270,400]));
+        // mapa.push(new Linea([270,400],[290,300]));
+
+        // mapa.push(new Linea([50,200],[100,200]));
+        // mapa.push(new Linea([50,150],[100,200]));
+        // mapa.push(new Linea([0,350],[50,400]));
+
+        // mapa.push(new Linea([0,500],[100,600]));
+        // mapa.push(new Linea([200,600],[400,520]));
+        // mapa.push(new Linea([170,400],[270,300]));
+        //-----------------------------------------------
+        // - mapa de pinball
+        // parte baja mapa 1
+        mapa.push(new Linea([113,600],[113,587]));
+        mapa.push(new Linea([292,600],[292,587]));
+        mapa.push(new Linea([42,575],[16,575]));
+        mapa.push(new Linea([330,575],[357,575]));
+        mapa.push(new Linea([43,575],[43,547]));
+        mapa.push(new Linea([16,575],[16,475]));
+        mapa.push(new Linea([330,563],[330,575]));
+        mapa.push(new Linea([355,475],[355,575]));
+        mapa.push(new Linea([355,475],[355,375]));
+        mapa.push(new Linea([113,587],[43,546]));
+        mapa.push(new Linea([292,587],[330,563]));
+        mapa.push(new Linea([263,568],[333,522]));
+        mapa.push(new Linea([140,568],[44,507]));
+        // triangulos mapa 1
+        mapa.push(new Linea([133,532],[100,462]));
+        mapa.push(new Linea([271,534],[304,462]));
+        mapa.push(new Linea([100,515],[100,466]));
+        mapa.push(new Linea([304,515],[304,462]));
+        mapa.push(new Linea([272,533],[304,514]));
+        mapa.push(new Linea([132,534],[100,514]));
+        // resto parte baja
+        mapa.push(new Linea([45,508],[45,463]));
+        mapa.push(new Linea([71,494],[71,463]));
+        mapa.push(new Linea([333,523],[333,463]));
+        // parte medio mapa 1
+        mapa.push(new Linea([331,430],[331,383]));
+        mapa.push(new Linea([302,377],[302,320]));
+        mapa.push(new Linea([296,386],[320,360]));
+        mapa.push(new Linea([312,400],[332,380]));
+        mapa.push(new Linea([82,416],[82,365]));
+
+        
+
+        mapa.push(new Linea([220,200],[400,0]));
+
+        //-----------------------------------------------
+        //pCollision();
+        // function pCollision(){
+        //     for(let y= 400; y<500; y++){
+        //         for(let x= 0; x<100; x++){  
+        //             let m = 1;
+        //             if(((500-y) - (500-400)) >= (m*(x-100)) && ((500-y) - (500-400)) <= (m*(x-100+10))){
+        //                 ctx.beginPath();ctx.save();ctx.fillStyle = "#FF0000";ctx.strokeStyle = "#FF0000";ctx.arc(x,y,1,0,2*Math.PI);ctx.fill();
+        //             }    
+        //         }
+        //     }    
+        //     for(let y= 400; y<500; y++){
+        //         for(let x= 0; x<100; x++){  
+        //             let m = -1;
+        //             if(((500-y) - (500-400)) <= (m*(x-0)) && ((500-y) - (500-400)) >= (m*(x-0+10))){
+        //                 ctx.beginPath();ctx.save();ctx.fillStyle = "#FF0000";ctx.strokeStyle = "#FF0000";ctx.arc(x,y,1,0,2*Math.PI);ctx.fill();
+        //             }    
+        //         }
+        //     }    
+        //     ctx.font="bold 30px sans-serif"; ctx.fillText("fin pcollision",10,canvas.height/2);
+        // }
+        //-----------------------------------------------
+
+        // ordenar lineas para optimizar
+        ordenarVector();
+        let ciclo=setInterval(()=>{game()},10)  // inicio de juego...
+
+        //crearCirculo();
+
+        function crearCirculo(){
+            let x=200, y=300, r=100;
+
+            for(let i=-r; i<r; i+=0.1){
+                let j = Math.sqrt(Math.pow(r,2)-Math.pow(i,2));
+                ctx.beginPath();
+                ctx.save();
+                ctx.fillStyle = "#FF0000";
+                ctx.strokeStyle = "#FF0000";
+                ctx.arc(i+x,(j+y),1,0,2*Math.PI);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.save();
+                ctx.fillStyle = "#FF0000";
+                ctx.strokeStyle = "#FF0000";
+                ctx.arc(i+x,((-j)+y),1,0,2*Math.PI);
+                ctx.fill();
+            }
+        }
+        
+        //-----------------------------------------------
+        //pruebaObj();
+        // - funcion para probar colision -
+        function pruebaObj(){
+            for(let j=0; j<600; j=j+1){
+                for(let i=0; i<400; i=i+1){
+                    ball.x = i; ball.y = j;
+                    let angBall = 45;
+                    for(let e=0; e<mapa.length; e++){
+                        if(mapa[e].ym > ball.y-distOpt && mapa[e].ym < ball.y+distOpt){
+                            if(collision(ball,angBall,mapa[e])){
+                                console.log("pruebas.....colision objeto: "+e);
+                                ctx.beginPath();
+                                ctx.save();
+                                ctx.fillStyle = "#FF0000";
+                                ctx.strokeStyle = "#FF0000";
+                                ctx.arc(i,j,1,0,2*Math.PI);
+                                ctx.fill();
+                                //ball.vely -= grav;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            ctx.font="bold 30px sans-serif"; ctx.fillText("fin pcollision",10,canvas.height/2);
+        }
+        //-----------------------------------------------
+
+        // - Ciclo principal funcion game -
+        function game() {
+            //console.log("velx: "+ball.velx+"  vely: "+ball.vely);
+
+            // - GRAVEDAD beta -
+            ball.vely += grav;
+            let mb = ball.vely/ball.velx; // pendiente de la bola    
+            let angBall = gradtoNormal(mb); // angulo de la bola
+            
+
+            moveBall(ball.velx,ball.vely);
+            let velT = Math.sqrt(Math.pow(ball.velx,2)+Math.pow(ball.vely,2));
+            let avc = velT/(velT*2);
+            // - Colisiones - beta -
+            //console.log("INICIO DEL FOR-------------------")
+            for(let i=0; i<mapa.length; i++){
+                
+                if(mapa[i].ym > ball.y-distOpt && mapa[i].ym < ball.y+distOpt){
+                    /*
+                    for(let c=0; c<velT; c+=avc){
+                        moveBall(velAx/(velAx*2),velAy/(velAy*2));
+                    }
+                    */
+
+                    if(collision(ball,angBall,mapa[i])){
+                        console.log("colision objeto: "+i);
+                        //ball.vely -= grav;
+                        break;
+                    }
+                    
+                    /*
+                    let velAx = ball.velx/2, velAy = ball.vely/2;
+                    moveBall(velAx/2,velAy/2);
+
+                    if(collision(ball,angBall,mapa[i])){
+                        console.log("colision2 objeto: "+i);
+                        //ball.vely -= grav;
+                        break;
+                    }
+                    moveBall(-(velAx/2),-(velAy/2));
+                    
+                    */
+                    //console.log("Objeto#: "+i);
+
+                }
+            }
+
+            // - Empuje star PRUEBAS -
+            if(ball.y<100){
+                ball.velx += empj;
+            }
+            
+
+            // - Pausar juego PRUEBAS - 
+            if(ball.vely > 0){
+                if(ball.vely < 0.005 && ball.y > 600-whC*3){
+                    clearInterval(ciclo);
+                    ctx.font="bold 30px sans-serif";
+                    ctx.fillText("Fin de rebote",10,canH.height/2);
+                    return 0;
+                }
+            }
+
+            // - Mover bola - alpha
+            
+            // - Pintar juego - alpha
+            paint();
+            
+        }
+
+        function collision(ball,angBall,obj){
+
+            let x1,x2,y1,y2,m=obj.m;
+
+            if(true){ // objeto linea 
+                if(obj.p1[0] < obj.p2[0]){ x1=obj.p1[0]; x2=obj.p2[0];}
+                else{ x1=obj.p2[0]; x2=obj.p1[0]; }
+                if(obj.p1[1] < obj.p2[1]){ y1=obj.p1[1]; y2=obj.p2[1];}
+                else{ y1=obj.p2[1]; y2=obj.p1[1]; }
+
+                if(m == null){ // - lineas rectas -
+                    if(y1 == y2){ // linea horizontal
+                        if((ball.y+ball.r > y1 && ball.y+ball.r < y2+whC && ball.x+ball.r > x1 && ball.x+ball.r < x2)
+                         ||(ball.y+ball.r > y1 && ball.y+ball.r < y2+whC && ball.x-ball.r > x1 && ball.x-ball.r < x2)
+                         ||(ball.y-ball.r > y1 && ball.y-ball.r < y2+whC && ball.x+ball.r > x1 && ball.x+ball.r < x2)
+                         ||(ball.y-ball.r > y1 && ball.y-ball.r < y2+whC && ball.x-ball.r > x1 && ball.x-ball.r < x2)){
+                            ball.vely = -(ball.vely/1.5); ball.y+=ball.vely; return true;
+                        }
+                    }
+                    if(x1 == x2){ // linea vertical
+                        if((ball.x+ball.r > x1 && ball.x+ball.r < x2+whC && ball.y+ball.r > y1 && ball.y+ball.r < y2)
+                         ||(ball.x+ball.r > x1 && ball.x+ball.r < x2+whC && ball.y-ball.r > y1 && ball.y-ball.r < y2)
+                         ||(ball.x-ball.r > x1 && ball.x-ball.r < x2+whC && ball.y+ball.r > y1 && ball.y+ball.r < y2)
+                         ||(ball.x-ball.r > x1 && ball.x-ball.r < x2+whC && ball.y-ball.r > y1 && ball.y-ball.r < y2)){
+                            ball.velx = -(ball.velx/1.5); ball.x+=ball.velx; return true;
+                        } 
+                    }
+                }
+                else{   // lineas curvas
+                    if(ball.x > x1 && ball.x < x2 && ball.y > y1 && ball.y < y2){ // colision cuadro
+                        
+                        let gradC = pendtoGrado(m);
+                        let angRex = 180 - ((90-(270-angBall))+2*gradC); 
+                        let velT = Math.sqrt(Math.pow(ball.velx,2)+Math.pow(ball.vely,2));
+                        if(angRex<0) angRex = 360 + angRex;
+
+                        if(m>0){ // linea curva m positiva   135 grados
+                            if(((canH-ball.y+ball.r)-(canH-obj.p1[1])) <= (-m*(ball.x+ball.r-obj.p1[0]-whC)) && ((canH-ball.y+ball.r)-(canH-obj.p1[1])) >= (-m*(ball.x+ball.r-obj.p1[0]))
+                             ||((canH-ball.y+ball.r)-(canH-obj.p1[1])) <= (-m*(ball.x-ball.r-obj.p1[0]-whC)) && ((canH-ball.y+ball.r)-(canH-obj.p1[1])) >= (-m*(ball.x-ball.r-obj.p1[0]))
+                             ||((canH-ball.y-ball.r)-(canH-obj.p1[1])) <= (-m*(ball.x+ball.r-obj.p1[0]-whC)) && ((canH-ball.y-ball.r)-(canH-obj.p1[1])) >= (-m*(ball.x+ball.r-obj.p1[0]))
+                             ||((canH-ball.y-ball.r)-(canH-obj.p1[1])) <= (-m*(ball.x-ball.r-obj.p1[0]-whC)) && ((canH-ball.y-ball.r)-(canH-obj.p1[1])) >= (-m*(ball.x-ball.r-obj.p1[0]))){
+                                //console.log("COLISION CURVA que pendiente le vas a dar ni puta idea aborten a no espera la inventamos");
+                                //console.log("grados de la linea curva: "+gradC);
+                                //console.log("grados de la ball: "+angBall);
+
+                                //console.log("velocidad total: "+velT);
+                                
+                                ball.velx = (velT * Math.cos(toRad(angRex)));
+                                ball.vely = -(velT * Math.sin(toRad(angRex)));
+                                //console.log("nueva velocidadx: "+ball.velx);
+                                //console.log("nueva velocidady: "+ball.vely);
+                                ball.x += ball.velx; ball.y += ball.vely;
+                                // ball.velx = ((velT/1.5) * Math.cos(toRad(angRex)));
+                                // ball.vely = -((velT/1.5) * Math.sin(toRad(angRex)));
+                                console.log("angulo reflexion: "+angRex);
+                                return true;
+                            }
+                        }
+                        else{   // linea curva m negativa   45 grados
+                            if(((canH-ball.y+ball.r)-(canH-obj.p1[1])) >= (-m*(ball.x+ball.r-obj.p1[0])) && ((canH-ball.y+ball.r)-(canH-obj.p1[1])) <= (-m*(ball.x+ball.r-obj.p1[0]+whC))
+                             ||((canH-ball.y+ball.r)-(canH-obj.p1[1])) >= (-m*(ball.x-ball.r-obj.p1[0])) && ((canH-ball.y+ball.r)-(canH-obj.p1[1])) <= (-m*(ball.x-ball.r-obj.p1[0]+whC))
+                             ||((canH-ball.y-ball.r)-(canH-obj.p1[1])) >= (-m*(ball.x+ball.r-obj.p1[0])) && ((canH-ball.y-ball.r)-(canH-obj.p1[1])) <= (-m*(ball.x+ball.r-obj.p1[0]+whC))
+                             ||((canH-ball.y-ball.r)-(canH-obj.p1[1])) >= (-m*(ball.x-ball.r-obj.p1[0])) && ((canH-ball.y-ball.r)-(canH-obj.p1[1])) <= (-m*(ball.x-ball.r-obj.p1[0]+whC))){
+                                //console.log("COLISION CURVA que pendiente le vas a dar ni puta idea aborten a no espera la inventamos");
+                                //console.log("grados de la linea curva: "+gradC);
+                                //console.log("grados de la ball: "+angBall);
+
+                                //console.log("velocidad total: "+velT);
+                                
+                                ball.velx = (velT * Math.cos(toRad(angRex)));
+                                ball.vely = -(velT * Math.sin(toRad(angRex)));
+                                //console.log("nueva velocidadx: "+ball.velx);
+                                //console.log("nueva velocidady: "+ball.vely);
+                                ball.x += ball.velx; ball.y += ball.vely;
+                                //ball.velx = ((velT/1.0) * Math.cos(toRad(angRex)));
+                                //ball.vely = -((velT/1.0) * Math.sin(toRad(angRex)));
+                                console.log("angRex: "+angRex+"   angLinea: "+gradC);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            else{   // objeto curvas
+                // aun no llegan formulas 
+            }
+            return false;
+        }
+
+        
+        function moveBall(x,y) {
+            ball.x+= x;
+            ball.y+= y;
+        }
+
+
+        // funcion pintar canvas
+        function paint() {
+
+            // limpiar canvas
+			canvas.width=canvas.width;
+
+            var img = new Image();
+            img.src = "img/pinball2.png";
+            ctx.drawImage(img, 0, 0);
+
+            // dibujar mapaBajo - beta -
+            // mapa.map((e)=>{
+            //     ctx.strokeStyle= "#FF0000";
+            //     ctx.lineWidth = 3;
+			// 	ctx.strokeStyle = "#f00";
+			// 	ctx.beginPath();
+			// 	ctx.moveTo(e.p1[0], e.p1[1]);
+            //   ctx.lineTo(e.p2[0], e.p2[1]);
+
+            //     ctx.font="bold 10px sans-serif";
+            //     ctx.fillText(""+e,e.p1[0],e.p1[1]);
+			// 	ctx.stroke();
+            // })
+
+            
+            for(let i=0; i<mapa.length; i++){
+
+                
+                ctx.strokeStyle= "#FF0000";
+                ctx.lineWidth = 3;
+				ctx.strokeStyle = "#f00";
+                ctx.beginPath();
+				ctx.moveTo(mapa[i].p1[0], mapa[i].p1[1]);
+                ctx.lineTo(mapa[i].p2[0], mapa[i].p2[1]);
+                ctx.font="bold 10px sans-serif";
+                ctx.fillText(""+i,mapa[i].xm-10,mapa[i].ym);
+				ctx.stroke();
+            }
+
+            // (if) dibujar bola - beta -
+            ctx.beginPath();
+			ctx.save();
+			ctx.fillStyle = "#FF0000";
+			ctx.strokeStyle = "#FF0000";
+            ctx.arc(ball.x,ball.y,5,0,2*Math.PI);
+			ctx.fill();
+
+            // (if) dibujar mapaAlto
+            // dibujar mapa luces
+		}
+
+        // funcion ordenar vector metodo burbuja
+        function ordenarVector(){
+
+            for(let i=0; i<mapa.length-1; i++){
+                for(let j=i+1; j<mapa.length; j++){
+                    if(mapa[i].ym > mapa[j].ym){
+                        let aux = mapa[i];mapa[i] = mapa[j];mapa[j] = aux;
+                    }
+                }
+            } 
+        }
+
+        // CONVERTIR gradosProg a grados plano cartesiano
+        function gradtoNormal(mb){
+
+            let angBall = pendtoGrado(mb);
+            if(angBall > -90 && angBall < 0){
+                if(ball.velx > 0 && ball.vely < 0){
+                    angBall = -angBall;
+                }
+                else{
+                    angBall = -angBall + 180; 
+                }
+            }
+            else {
+                if(ball.velx > 0 && ball.vely > 0){
+                    angBall = 360 - angBall;
+                }
+                else{
+                    angBall = 180 - angBall; 
+                }
+            }
+            return angBall;
+        }
+
+        // CONVERTIR pendiente a grados
+        function pendtoGrado(m){
+            return Math.atan(m)*180/Math.PI;
+        }
+
+        // CONVERTIR grados a grados radianes
+        function toRad(g){
+			return (g*Math.PI)/180;
+        }
+        
+        //------------------------- eventos -------------------------------------
+		document.addEventListener("keypress",(e)=>{
+			if(e.keyCode==97){ // izquierda tecla A
+				
+			}
+			if(e.keyCode==100){	// derecha tecla D
+				
+			}
+            if(e.keyCode==119){	// arriba tecla W
+                
+			}
+			if(e.keyCode==115){ // abajo tecla S
+				
+			}
+		})
+
+    </script>
+</body>
+</html>

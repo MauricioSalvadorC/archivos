@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>lanzamiento</title>
+	<style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .todo{
+            display: flex;
+            margin: 20px;
+        }
+        .todo > div {
+            border: 1px solid;
+            border-radius: 50%;
+            background-color: rgb(207, 204, 204);
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* center verticalmente */
+            justify-content: center;
+            margin-left:20px;
+            height: 400px;
+            width: 400px;
+        }
+        .todo > div > div{
+            margin: 1.5px;
+            border: 1px solid;
+            display:flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content:space-evenly;
+            width: 70%;
+            height: 60px;
+            background-color: rgb(66, 181, 226);
+            color:white;
+            border-radius: 14px;
+        }
+        
+        button{
+            font-size: 20px;
+            font-weight: bold;
+            width: 90px;
+            height: 50px;
+            border-radius: 10px;
+        }
+        .active{
+            background-color: black;
+            color:white;
+        }
+    </style>
+</head>
+<body>
+    <div class="todo">
+        <canvas id="canvas" width="900" height="600" style="border: solid #000;"></canvas>
+        
+        <!-- <span id="datos"></span> -->
+        <div>
+            <div>
+                <button class="botonBola active" onclick="activar('.botonBola', 1)" type="radio">BOLA</button>
+                <button class="botonLinea" onclick="activar('.botonLinea', 2)" type="radio">LINEA</button>   
+            </div>
+            <div>
+                <div>
+                    <span class="estilo">radio</span>
+                </div>
+                <div>
+                    <input class="estilo" onchange="preview()" type="range" name="" id="radio" min="1" max="30" value="7">
+                    <label class="estilo" for="radio" id="labelRadio"></label>
+                </div>
+                <div>
+                    <canvas style="border: 3px solid black; position: relative; top: 1.5px; left: 0;" id="preview" width="50" height="50" style="border: solid #000;"></canvas>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <span>gravedad</span>
+                </div>
+                <div>
+                    <input onchange="preview()" type="range" name="" id="gravedad" min="0" max="20" value="10">
+                    <label for="gravedad" id="labelGravedad"></label>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <span>F rozamiento</span>
+                </div>
+                <div>
+                    <input onchange="preview()" type="range" name="" id="rozamiento" min="0" max="100" value="20">
+                    <label for="rozamiento" id="labelRozamiento"></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+	<script type="text/javascript">
+		let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+        let canvas2= document.querySelector("#preview");
+        canvas2.style.backgroundColor= "white";
+        let ctx2= canvas2.getContext("2d");
+		// ciclo infinito
+        let tumae = setInterval(()=>{ main()},1);
+        // console.log("atan(1)= "+Math.atan(1)*180/Math.PI); //45
+        // console.log("asin(-2)= "+Math.asin(0.761577311)*180/Math.PI);
+        let radio= document.querySelector("#radio");
+
+		WIDTH= canvas.width; HEIGHT=canvas.height;
+
+		class Bola{
+			constructor(x,y,r,vx,vy, color){
+				this.x= x;
+				this.y= y;
+				this.r= r;
+                this.vx= vx;
+                this.vy= vy;
+                this.color= color;
+			}
+		}
+		class Linea{
+			constructor(x1,y1,x2,y2){
+				this.x1= x1;
+				this.y1= y1;
+                this.x2= x2;
+				this.y2= y2;
+			}
+		}
+		
+		//bolaColision= new Bola(300,270,50);
+		bolas= [];//[new Bola(200,200,10,0.0001,0.00001,"blue")];
+        lineas= []//[new Linea(200,100, 200, 600), new Linea(300,500, 500, 500)];
+        let gravedad, rozamiento, sw=1;
+        let r=3, pressed = false, aum = 0.3;
+        let x1=100, y1=100, x2=120, y2=120;
+        let disVel, m;
+        //procesos rebote
+        let angRect, angBola, velT=0, angReflex=0;
+
+        // lineas.push( new Linea(x1,y1,x2,y2) );
+        // lineas.push( new Linea((x1+x2)/2,(y1+y2)/2,(x1+x2)/2+30,(y1+y2)/2) );
+        //lineas.push( new Linea(x1,y1,x2,y2) );
+
+        preview();
+        function pintarPoligono(x,y, n, hipotenusa, angulo=undefined){
+            let incremento= 360/n;
+            let vx=[], vy=[];
+            let radians;
+            if(angulo==undefined){
+                angulo= 90+180;
+                if(n%2==0){
+                    angulo+=incremento/2;
+                }
+            }
+            for (let i = 0; i < n; i++) {
+                radians = ToRad(angulo);
+                vx[i] = parseInt(x + hipotenusa * Math.cos(radians));
+                vy[i] = parseInt(y + hipotenusa * Math.sin(radians));
+                angulo += incremento;
+            }
+            drawPoligon(vx,vy);
+        }
+        function drawPoligon(vx,vy) {
+            ctx.fillStyle = '#f00';
+
+            ctx.beginPath();
+            ctx.moveTo(vx[0], vy[0]);
+            for(let i=1 ; i<vx.length ; i++) {ctx.lineTo( vx[i] , vy[i] )}
+
+            ctx.closePath();
+            ctx.stroke();
+        }
+        let h= 300;
+        let dis= h-h/5;
+        let s= h/20;
+        let rc= (dis-4*s)/9;
+        function pintarBolitas(x,y){
+            let aux= 9;
+            x-= 8*rc + 4*s;
+            while(aux>=5){
+                pintarLineaBolitas(x,y,aux--);
+                y-= Math.sqrt(3)*(2*rc+s)/2;
+                x+= (2*rc+s)/2;
+            }
+            aux= 8;
+            y+= (Math.sqrt(3)*(2*rc+s)/2)*6;
+            x-= (2*rc+s)/2*4;
+            while(aux>=5){
+                pintarLineaBolitas(x,y,aux--);
+                y+= Math.sqrt(3)*(2*rc+s)/2;
+                x+= (2*rc+s)/2;
+            }
+        }
+        function pintarLineaBolitas(x,y,n){
+            for(let i=0; i<n; i++){
+                pintarCirculo(x, y, rc, "black");
+                x+= 2*rc+s;
+            }
+        }
+
+        // lineas.push(new Linea(200, 200, 400, 200));
+        // lineas.push(new Linea(200, 200, 200, 400));
+        // lineas.push(new Linea(900, 200, 900, 400));
+        // lineas.push(new Linea(400, 400, 400, 200));
+        // lineas.push(new Linea(400, 400, 200, 400));
+        // lineas.push(new Linea(814.47265625, 294.4726562, 110.0083713531494, 249.008371353));
+        // lineas.push(new Linea(366.47265, 712.47265, 122.008371, 288.0083713));
+        
+        
+
+        function main(){
+        	canvas.width= canvas.width;
+            
+            // pintarPoligono(canvas.width/2, canvas.height/2, 6, h);
+            // pintarBolitas(canvas.width/2, canvas.height/2);
+
+            // drawPoligon([100,200,300],[100,100,300]);
+            
+            // pintarPoligono(100,100,3,100);
+            // pintarPoligono(400,100,4,100);
+            // pintarPoligono(100,250,5,100);
+            // pintarPoligono(400,250,6,100);
+            // pintarPoligono(100,400,7,100);
+            // pintarPoligono(400,400,8,100);
+
+            // let a=0.1;
+            // pintarPoligono(400,400,5,100,a+=0.2);
+
+            // console.log("vx= "+vx);
+			// console.log("vy= "+vy+"\n--------------------------------");
+            if(pressed) pintarLinea(x1,y1,x2,y2);
+            if(!pressed){
+                // for (let i = 0; i < HEIGHT; i+=3){
+                //     pintarCirculo(i,Fx(1,300,400,i),2,2*Math.PI)
+                // }
+                
+                for (let i = 0; i < bolas.length; i++) {
+                    let bola= bolas[i];
+                    
+                    if(bola.y-bola.r < 0 || bola.y+bola.r>HEIGHT){
+                        if(bola.y-bola.r < 0){
+                            bola.y= bola.r;
+                        }else{
+                            bola.y= HEIGHT-bola.r;
+                        }
+                        bola.vy= -bola.vy;
+                        bola.vx= bola.vx;
+                    }
+                    if(bola.x+bola.r >= WIDTH || bola.x-bola.r <= 0){
+                        if(bola.x+bola.r >= WIDTH){
+                            bola.x= WIDTH-bola.r;
+                        }else{
+                            bola.x= bola.r;
+                        }
+                        bola.vx= -bola.vx;
+                        bola.vy= bola.vy;
+                    }
+                    for(let j=0; j<lineas.length; j++){
+                        let punto= collisionRects(bolas[i], lineas[j]);
+                        bolas[i].x= punto[0];
+                        bolas[i].y= punto[1];
+                    } 
+                    // for(let j=i+1; j<bolas.length; j++){
+                    //     if(i!=j){
+                    //         let punto1= collisionPelotas(bolas[i], bolas[j]);
+                    //         let punto2= collisionPelotas(bolas[j], bolas[i]);
+                    //         bolas[i].x= punto1[0];
+                    //         bolas[i].y= punto1[1];
+                    //         bolas[j].x= punto2[0];
+                    //         bolas[j].y= punto2[1];
+                    //     }
+                    // }
+                    // if(Math.abs(bola.vy)<0.001) bola.vy=0;
+                    rozamientoPorAngulo(bola);
+                }
+                for (let i = 0; i < bolas.length; i++){
+                    bolas[i].vy+= gravedad;
+                    bolas[i].x+= bolas[i].vx;
+                    bolas[i].y+= bolas[i].vy;       
+                }
+            }
+            for (let i = 0; i < bolas.length; i++) pintarBola(bolas[i]);
+            //labelRozamiento.innerHTML= "";
+            for (let i = 0; i < lineas.length; i++){
+                pintarLinea(lineas[i].x1, lineas[i].y1, lineas[i].x2, lineas[i].y2);
+                // pintarLinea(lineas[i].x1, lineas[i].y1, lineas[i].x1, lineas[i].y2);
+                // pintarLinea(lineas[i].x1, lineas[i].y2, lineas[i].x2, lineas[i].y2);
+                //  labelRozamiento.innerHTML= "<br>"+i+"<br>"+Math.atan((lineas[i].y2-lineas[i].y1)/(lineas[i].x2-lineas[i].x1))*180/Math.PI+
+                //                             "<br>"+Math.atan((lineas[i].x2-lineas[i].x1)/(lineas[i].y2-lineas[i].y1))*180/Math.PI;
+                // labelRozamiento.innerHTML+= i+"<br>"+(lineas[i].y2-lineas[i].y1)/(lineas[i].x2-lineas[i].x1)
+            }
+        }
+        function distanciaRectaPunto(x1,y1,x2,y2,px,py){
+            let m= (y2-y1)/(x2-x1);
+            if(x2==x1){
+                return Math.abs(px-x1);
+            }else{
+                let A= -m;
+                let B= 1;
+                let C= m*x1 - y1;
+                let d= (A*px + B*py + C)/Math.sqrt(A**2 + B**2);
+                return Math.abs(d);
+            }
+        }
+        function distanciaDosPuntos(x1,y1,x2,y2){
+            return Math.sqrt((x1-x2)**2+(y1-y2)**2);
+        }
+        function magnitudVector(vx, vy){
+            return Math.sqrt(vx**2+vy**2);
+        }
+        function Fx(m,x1,y1,x){
+            if(m==Infinity){
+                m= 9999999999;
+            }
+            if(m==-Infinity){
+                m=-9999999999;
+            }
+            return m*(x-x1)+y1;
+        }
+        // a= x1; b=y1; c=x4; d=y4;
+        function puntoIntercepcionRectas(x1,y1,x2,y2,x3,y3,x4,y4){
+            let m1= (y2-y1)/(x2-x1);
+            let m2= (y4-y3)/(x4-x3);
+            if((x1==x2 && x3==x4)||(y1==y2 && y3==y4)){ //son perpendiculares por lo tanto no existe punto
+                return NaN;
+            }else if(x1==x2){
+                return [x1,Fx(m2,x3,y3,x1)];
+            }else if(x3==x4){
+                return [x3,Fx(m1,x1,y1,x3)];
+            }else{
+                let x= (-x4*m2 + y4 + m1*x1 - y1)/(m1 - m2);
+                return [x,Fx(m2,x3,y3,x)];
+            }
+        }
+        // function puntoIntercepcionRectas2(m1,x1,y1,m2,x2,y2){
+        //     let x= (-x2*m2+y2+m1*x1-y1)/(m1-m2);
+        //     let y= m1*(x-x1)+y1;
+        //     return [x,y];
+        // }
+        function rozamientoPorAngulo(bola){
+            let angRad= Math.atan(bola.vy/bola.vx);
+            if(bola.vx==0) angRad= 1.5707;
+            bola.vx= bola.vx/(((rozamiento-1))*Math.cos(angRad)+1);  //(1+rozamiento*Math.abs(Math.cos(Math.atan(bola.vy/bola.vx)))/10);
+            bola.vy= bola.vy/((rozamiento-1)*Math.abs(Math.sin(angRad))+1);
+        }
+        
+        function collisionRects(bola, linea){
+            let m= (linea.y2-linea.y1)/(linea.x2-linea.x1);
+            // pintarLinea(0, Fx(m, linea.x1, linea.y1, 0), WIDTH, Fx(m, linea.x1, linea.y1, WIDTH));
+            let d= distanciaRectaPunto(linea.x1, linea.y1, linea.x2, linea.y2, bola.x, bola.y);
+            let intercepcion= puntoIntercepcionRectas(linea.x1, linea.y1, linea.x2, linea.y2, bola.x, bola.y, 0, Fx(-1/m, bola.x, bola.y, 0)); //intercepcion entre linea y recta perpendicular a esta pasando por la bola
+            let magnitud= Math.sqrt((bola.x-intercepcion[0])**2+(bola.y-intercepcion[1])**2);
+            let vectorBolaRecta= [bola.r*(bola.x-intercepcion[0])/magnitud, bola.r*(bola.y-intercepcion[1])/magnitud]; //unitario
+            let px= bola.x-vectorBolaRecta[0], py= bola.y-vectorBolaRecta[1];
+            // console.log(px+"  "+py);
+            // pintarLinea(0,Fx(bola.vy/bola.vx, bola.x, bola.y, 0), WIDTH,Fx(bola.vy/bola.vx, bola.x, bola.y, WIDTH))
+            
+            // ctx.beginPath();ctx.save();
+            // ctx.fillStyle = "black";  //color por dentro
+            // ctx.strokeStyle = "black";    // color prueba
+            // ctx.arc(intercepcion[0], intercepcion[1], 4, 0, 2*Math.PI);
+            // ctx.fill();
+
+            // ctx.beginPath();ctx.save();
+            // ctx.fillStyle = "blue";  //color por dentro
+            // ctx.strokeStyle = "black";    // color prueba
+            // ctx.arc(px, py, 4, 0, 2*Math.PI);
+            // ctx.fill();
+
+            // ctx.beginPath();ctx.save();
+            // ctx.fillStyle = "black";  //color por dentro
+            // ctx.strokeStyle = "black";    // color prueba
+            // ctx.arc(intercepcion[0]+vectorBolaRecta[0], intercepcion[1]+vectorBolaRecta[1], 4, 0, 2*Math.PI);
+            // ctx.fill();
+            
+            let velT= Math.sqrt(bola.vx**2+bola.vy**2);
+            if(linea.x2==linea.x1 && d <= bola.r && ((bola.y>=linea.y1 && bola.y<=linea.y2) || (bola.y<=linea.y1 && bola.y>=linea.y2))){
+                // console.log("entra1")
+                return [intercepcion[0]+vectorBolaRecta[0], intercepcion[1]+vectorBolaRecta[1]];
+                bola.vx= -bola.vx;
+            }else if(m<-1 || m>1){
+                if(((py>=linea.y1 && py<=linea.y2) || (py<=linea.y1 && py>=linea.y2))){
+                    if(d < bola.r){
+                        let alpha= ToAngulo(Math.atan(m));//angulo de linea variante, puede ser negativo y positivo el valor
+                        let t= ToAngulo(Math.atan(bola.vy/bola.vx));
+                        if(bola.vx<0){
+                            bola.vx= velT*Math.cos( ToRad(180-t+2*alpha) );
+                            bola.vy= velT*Math.sin( ToRad(180-t+2*alpha) );
+                        }else if(bola.vx!=0 || bola.vy!=0){
+                            bola.vx= -velT*Math.cos( ToRad(180-t+2*alpha) );
+                            bola.vy= -velT*Math.sin( ToRad(180-t+2*alpha) );
+                        }
+                        return [intercepcion[0]+vectorBolaRecta[0], intercepcion[1]+vectorBolaRecta[1]];
+                    }
+                }
+            }else if((px>=linea.x1 && px<=linea.x2)||(px<=linea.x1 && px>=linea.x2)){
+                if(d < bola.r){
+                    let alpha= ToAngulo(Math.atan(m));//angulo de linea variante, puede ser negativo y positivo el valor
+                    let t= ToAngulo(Math.atan(bola.vy/bola.vx));
+                    if(bola.vx<0){
+                        bola.vx= velT*Math.cos( ToRad(180-t+2*alpha) );
+                        bola.vy= velT*Math.sin( ToRad(180-t+2*alpha) );
+                    }else if(bola.vx!=0 || bola.vy!=0){
+                        bola.vx= -velT*Math.cos( ToRad(180-t+2*alpha) );
+                        bola.vy= -velT*Math.sin( ToRad(180-t+2*alpha) );
+                    }
+                    return [intercepcion[0]+vectorBolaRecta[0], intercepcion[1]+vectorBolaRecta[1]];
+                }
+            }
+            return [bola.x, bola.y];
+        }
+        function collisionPelotas(bola1, bola2){
+            let difference = [bola2.x - bola1.x, bola2.y - bola1.y];
+            let distance = Math.sqrt((bola2.x - bola1.x)**2 + (bola2.y - bola1.y)**2);
+            if (distance < bola1.r + bola2.r){
+                let normal = [(bola2.x - bola1.x)/distance, (bola2.y - bola1.y)/distance];
+                //vector velocityDelta = ball2.velocity - ball1.velocity
+                let velocityDelta = magnitudVector(bola1.vx, bola1.vy) - magnitudVector(bola2.vx, bola2.vy);
+
+                let dot = [normal[0]*velocityDelta, normal[1]*velocityDelta];
+
+                if (dot > 0) {
+                    let coefficient = 0.5;
+                    let impulseStrength = [(1 + coefficient) * dot[0] * (2), (1 + coefficient) * dot[1] * (2)] // let impulseStrength = (1 + coefficient) * dot * (1 / ball1.mass + 1 / ball2.mass)
+                    let impulseVx = impulseStrength[0] * normal;
+                    let impulseVy = impulseStrength[1] * normal;
+                    bola1.vx-= impulseVx;
+                    bola1.vy-= impulseVy;
+                    bola2.vx-= impulseVx;
+                    bola2.vy-= impulseVy;
+                    // ball1.velocity -= impulse / ball1.mass
+                    // ball2.velocity += impulse / ball2.mass
+                }
+            }
+        }
+        function preview(){
+            canvas2.height= canvas2.height;
+            ctx2.beginPath(); ctx2.save();
+            ctx2.fillStyle = "rgb("+random(0,255)+","+random(0,255)+","+random(0,255)+")";  //color por dentro
+            //ctx2.strokeStyle = "#ffffff";    // color prueba
+            ctx2.arc(25, 25, radio.value, 0, 2*Math.PI);
+            ctx2.fill();radio
+
+            ctx2.beginPath();ctx2.save();
+            ctx2.lineWidth= 1;
+            //ctx2.fillStyle = "#FF0000";  //color por dentro
+            ctx2.strokeStyle = "black";    // color prueba
+            ctx2.arc(25, 25, radio.value, 0, 2*Math.PI);
+            ctx2.stroke();
+            r= parseInt(radio.value);
+            labelRadio.innerHTML= r;
+            gravedad= parseInt(document.querySelector("#gravedad").value);
+            labelGravedad.innerHTML= gravedad;
+            gravedad/=500;
+            rozamiento= parseInt(document.querySelector("#rozamiento").value);
+            rozamiento= 1+rozamiento/10000;
+            labelRozamiento.innerHTML= document.querySelector("#rozamiento").value;
+        }
+        // function reboteEsfera(Dx, bola){
+            // ydx= (-x+h)/Math.sqrt(-x**2 + 2*h*x + r**2 - h**2);
+        //     let vx= bola.vx, vy= bola.vy;
+        //     let y1= Dx*(1-bola.x)+bola.y;
+        //     let y2= Dx*(2-bola.x)+bola.y;
+        //     let angRecta= ToAngulo( Math.atan(y2-y1) );
+
+        //     let angBola= ToAngulo( Math.atan(bola.vy/bola.vx) );
+        //     let vt= Math.sqrt(Math.pow(bola.vx,2)+Math.pow(bola.vy,2));
+
+        //     if(vx>0){
+        //         if(vy>0){
+        //             bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+        //             bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+        //         }else{
+        //             bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+        //             bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+        //         }
+        //     }else{
+        //         if(vy>0){
+        //             bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+        //             bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+        //         }else{
+        //             if(y2>y1){//pendiente positiva
+        //                 bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+        //                 bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+        //             }else{
+        //                 bola.vy= Math.sin( ToRad(angBola+angRecta) )*vt;
+        //                 bola.vx= Math.cos( ToRad(angBola+angRecta) )*vt;
+        //             }
+        //         }
+        //     }
+        // }
+
+        function pintarBola(bola) {
+            ctx.beginPath();ctx.save();
+            ctx.lineWidth= 3;
+            ctx.fillStyle = bola.color;  //color por dentro
+            ctx.strokeStyle = bola.color;    // color prueba
+            ctx.arc(bola.x, bola.y, bola.r, 0, 2*Math.PI);
+            ctx.stroke();
+            
+            // pintarLinea(bola.x, bola.y, bola.x+40*bola.vx, bola.y);
+            // pintarLinea(bola.x, bola.y, bola.x, bola.y+40*bola.vy);
+            // pintarLinea(bola.x, bola.y, bola.x+40*bola.vx, bola.y+40*bola.vy);
+            
+        }
+        function pintarCirculo(x,y,r,c) {
+            ctx.beginPath();ctx.save();
+            ctx.lineWidth= 3;
+            ctx.fillStyle = c;  //color por dentro
+            ctx.strokeStyle = c;    // color prueba
+            ctx.arc(x, y, r, 0, 2*Math.PI);
+            ctx.fill();
+        }
+        function pintarLinea(x1,y1,x2,y2) {
+            ctx.lineWidth = 3;   // grosor de la linea
+            ctx.strokeStyle= "#ff0000ee";
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+        }
+        
+        // EVENTO MOUSEDOWN -----------------------------
+        canvas.addEventListener("mousedown",(evt)=>{   // detecta cuando das click 
+            // console.log(evt);
+            evt.preventDefault();
+            const {x, y}= getMousePosition(evt);
+            //console.log("empezo a dibujar");
+            x1 = x;
+            y1 = y;
+
+            if(sw==1) bolas.push(new Bola(x1,y1,r,0,0,"rgb("+random(20,200)+","+random(20,200)+","+random(20,200)+")"));
+            pressed = true;
+        }, false);
+
+        // EVENTO MOUSEMOVE ----------------------------
+        canvas.addEventListener("mousemove",(evt)=>{   // detecta cuando el mouse se mueve 
+            evt.preventDefault();  
+            const {x, y}= getMousePosition(evt);
+
+            x2 = x;
+            y2 = y;
+            //if(sw==2) pintarLinea(x1,y1,x2,y2);
+            //console.log("dibujando...");
+        }, false);
+
+        // EVENTO MOUSEUP ------------------------------
+        canvas.addEventListener("mouseup",(evt)=>{     // detecta cuando deja de presionar
+            evt.preventDefault();
+            const {x, y}= getMousePosition(evt);
+            x2 = x;
+            y2 = y;
+            if(sw==1){
+                bolas[bolas.length-1].vx= (x2-x1)/60+0.0001;
+                bolas[bolas.length-1].vy= (y2-y1)/60+0.0001;
+            }else if(sw==2 && (x1!=x2 || y1!=y2)){
+                lineas.push( new Linea(x1,y1,x2,y2) );
+            }
+            
+            //console.log("dejo de dibujar");
+            pressed = false;
+            //aum*= -1;
+        }, false);
+        function getMousePosition(evt){
+            let ClientRect = canvas.getBoundingClientRect(), 
+                scaleX = canvas.width / ClientRect.width,
+                scaleY = canvas.height / ClientRect.height; 
+                    return {
+                    x: (evt.clientX - ClientRect.left)-1, 
+                    y: (evt.clientY - ClientRect.top)-1
+                }
+        }
+
+        function activar(e, s){
+            // document.querySelectorAll("button").forEach((c)=>{
+            //     c.classList.remove("active");
+            // })
+            [...document.querySelectorAll("button")].map((c)=>{
+                c.classList.remove("active");
+            });
+            document.querySelector(e).classList.toggle("active");
+            sw= s;
+        }
+
+        // CONVERTIR pendiente a grados
+        function pendtoGrado(m){
+            return Math.atan(m)*180/Math.PI;
+        }
+        
+        function ToAngulo(rad){
+        	return rad*180/Math.PI;
+        }
+
+        // Retorna un número aleatorio entre min (incluido) y max (incluido)
+        function random(min, max) {
+            return Math.random() * (max - min) + min + 1;
+        }
+
+        function ToRad(angulo){
+            return angulo*Math.PI/180;
+        }
+
+        function valorAbs(x){
+        	if(x<0) return -x;
+        	return x;
+        }
+
+        function planoC(y){
+        	return HEIGHT-y;
+        }
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html + body{
+            width: 99vw;
+            height: 99vh;
+        }
+        *{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        #canvas{
+            margin: 10px;
+        }
+        #ordenar{
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #ordenar div{
+            width: 180px;
+        }
+        #label{
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div id="ordenar">
+        <div>
+            <label>x</label>
+            <input type="range" id="px" min="0" max="100">
+            <label for="px" id="x">50</label>
+        </div>
+        <div>
+            <label>y</label>
+            <input type="range" id="py" min="0" max="100">
+            <label for="py" id="y">50</label>
+        </div>
+        <button onclick="addPunto()">agregar punto</button>
+    </div>
+    <canvas width="500px" height="500px" id="canvas" style="border: 1px solid rgb(255, 0, 0);"></canvas>
+
+    <script>    
+        let px= document.querySelector("#px");
+        let py= document.querySelector("#py");
+        let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+        canvas.width= document.body.clientWidth-30;
+        canvas.height= document.body.clientHeight;
+        px.max= canvas.width;
+        py.max= canvas.height;
+
+        let tumae = setInterval(()=>{ main()},1);
+        let ps=[], t=0, ts=0.001;
+        // let p1=[100,100], p2=[200,300];
+        //     ps.push([p1[0],p1[1]]);
+        //     ps.push([p1[0],p1[1]+(p2[1]-p1[1])/1.3]);
+        //     ps.push([p2[0],p2[1]+(p1[1]-p2[1])/1.3]);
+        //     ps.push([p2[0],p2[1]]);
+        // ps.push([p1[0],p1[1]]);
+        // ps.push([p1[0],p1[1]+(p2[1]-p1[1])/1.3]);
+        // ps.push([p2[0],p2[1]+(p1[1]-p2[1])/1.3]);
+        // ps.push([p2[0],p2[1]]);
+            
+        
+        // pintarLinea(...ps[0],...ps[1],"black");
+        // pintarLinea(...ps[2],...ps[1],"black");
+        // pintarLinea(...ps[2],...ps[3],"black");
+        function addPunto(){
+            canvas.width= canvas.width;
+            t=0;
+            ps.push([document.querySelector("#x").innerHTML, document.querySelector("#y").innerHTML]);
+        }
+        
+        function main(){
+            for(let i=0; i<ps.length; i++){
+                pintarTexto(canvas.width-140, i*20+20, "p"+i+": ("+ps[i][0]+","+ps[i][1]+")");
+                pintarBola(ps[i][0], ps[i][1], 2, "red");
+                if(i>=1) pintarLinea(...ps[i],...ps[i-1],"grey");
+            }
+            // px= (1-t)*ps[0][0]+t*ps[1][0];
+            // py= (1-t)*ps[0][1]+t*ps[1][1];
+            if(ps.length>1){
+                pintarBola(fx(ps, t, ps.length-1, 0),fy(ps, t, ps.length-1, 0), 1, "blue"); 
+                if(t<=1) t+=ts;
+            }
+        }
+        function fx(ps=[], t, n, i){//i= 0
+            if(i==n) return combinacion(n,i)*ps[i][0]*(1-t)**(n-i)*t**i;
+            return combinacion(n,i)*ps[i][0]*(1-t)**(n-i)*t**i + fx(ps, t, n, i+1);  
+        }
+        function fy(ps=[], t, n, i){//i= 0
+            if(i==n) return combinacion(n,i)*ps[i][1]*(1-t)**(n-i)*t**i;;
+            return combinacion(n,i)*ps[i][1]*(1-t)**(n-i)*t**i + fy(ps, t, n, i+1);  
+        }
+
+        function pintarLinea(x1,y1,x2,y2,c) {
+            ctx.lineWidth = 1;   // grosor de la linea
+            ctx.strokeStyle= c;
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+        }
+        function pintarBola(x,y,r,c) {
+            ctx.beginPath();ctx.save();
+            //ctx.fillStyle = "#FF0000";  //color por dentro
+            ctx.strokeStyle = c;    // color prueba
+            ctx.arc(x, y, r, 0, 2*Math.PI);
+            ctx.stroke();
+        }
+        function factorial(x){
+            if(x==0) return 1;
+            return x*factorial(x-1);
+        }
+        function combinacion(n,k){
+            return factorial(n)/factorial(k)/factorial(n-k);
+        }
+
+        function pintarTexto(x,y,cad) {
+            ctx.beginPath() //iniciar ruta
+            // ctx.strokeStyle="blue"; //color externo
+            ctx.fillStyle="black"; //color de relleno
+            ctx.font="bold 20px arial"; //estilo de texto
+            // ctx.strokeText(cad,x,y); //cad con método stroke
+            ctx.fillText(cad,x,y); //cad con método fill
+            // ctx.strokeText(cad,10,140); //cad con los dos métodos
+            // ctx.fillText(cad,10,140);
+        }
+
+        px.addEventListener("mousemove",e=>{ 
+            document.querySelector("#x").innerHTML= px.value;
+        });
+        py.addEventListener("mousemove",e=>{ 
+            document.querySelector("#y").innerHTML= py.value;
+        });
+        px.addEventListener("touchmove",e=>{ 
+            document.querySelector("#x").innerHTML= px.value;
+        });
+        py.addEventListener("touchmove",e=>{ 
+            document.querySelector("#y").innerHTML= py.value;
+        });
+
+    </script>
+</body>
+</html>

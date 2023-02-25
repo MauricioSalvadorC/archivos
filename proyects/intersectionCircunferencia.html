@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>interseccion rectangulos</title>
+	<style>
+        *{
+                box-sizing: border-box;   
+        }
+		canvas{
+			display: inline-block;
+		}
+        .salto{
+
+        }
+        #arriba{
+            display: flex;
+            flex-flow: row wrap;      
+            margin: 0px 0px;
+            padding: 3px;
+        }
+        div{
+            display: inline-block;
+            margin: 1px 0px;
+            padding: 3px;   
+        }
+        button{
+            display: block;
+        }
+        section{
+            display: inline-block;
+            width: 300px;
+            height: 300px;
+        }
+
+	</style>
+</head>
+<body>
+	<div id="arriba">  
+        <canvas id="canvas" width="700" height="500" style="border: solid #000;"></canvas>
+        <section id="rectC" style="border: solid green" width="400" height="500">
+            
+        </section>
+    </div>  
+    <div style="border: solid blue">   
+        ingrese datos circunferencia1 <br>                  
+        ingrese centro.x: <input type="text" id="h" placeholder=""> <br>
+        ingrese centro.y: <input type="text" id="k" placeholder=""> <br>
+        ingrese radio: <input type="text" id="r" placeholder=""> <br>
+    </div>
+    <div style="border: solid red">   
+        ingrese datos circunferencia2 <br>                  
+        ingrese centro.x: <input type="text" id="j" placeholder=""> <br>
+        ingrese centro.y: <input type="text" id="p" placeholder=""> <br>
+        ingrese radio: <input type="text" id="n" placeholder=""> <br>
+    </div>
+	<button onclick="pintar()">pintar</button>
+
+	<script type="text/javascript">
+		let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+
+		// ciclo infinito
+		WIDTH= 700; HEIGHT=500;
+        let RED= "red";
+        let BLUE= "blue";
+        class Punto{
+            constructor(x,y){
+                this.x= x;
+                this.y= y;
+            }
+        }
+        let u,c,b,a,h,k,r,j,p,n;
+        let puntos1= [], puntos2= [];
+
+        function pintar(){
+            canvas.width= canvas.width;
+            //tomar datos
+            h= Number(document.querySelector("#h").value);
+            k= Number(document.querySelector("#k").value);
+            r= Number(document.querySelector("#r").value);
+            j= Number(document.querySelector("#j").value);
+            p= Number(document.querySelector("#p").value);
+            n= Number(document.querySelector("#n").value);
+            //pintar circunferencias
+            pintarCircunferencia(h,k,r,BLUE);
+            pintarCircunferencia(j,p,n,RED);
+            //calcular interseccion
+            //1.variables de reduccion
+            u= 2*(p-k);
+            c= -Math.pow(h,2)+Math.pow(p,2)-Math.pow(k,2)+Math.pow(j,2)-Math.pow(n,2)+Math.pow(r,2)-u*k;
+
+            //2.variables para el calculo en x1 y x2
+            raiz= 2*Math.sqrt( -4*Math.pow(h,4) + 8*j*Math.pow(h,3) + 4*Math.pow(r,2)*Math.pow(h,2) - 4*c*Math.pow(h,2)
+            -4*Math.pow(j,2)*Math.pow(h,2) + 4*c*j*h - 8*j*h*Math.pow(r,2) + 4*Math.pow(j,2)*Math.pow(r,2) + 
+            Math.pow(u,2)*Math.pow(r,2) - Math.pow(c,2) );
+
+            b= u*( -u*( -2*h+(4*c*h-4*c*j)/Math.pow(u,2) ) );
+            a= 2*( 4*Math.pow(h,2) - 8*j*h + 4*Math.pow(j,2) + Math.pow(u,2) );
+
+            //3.calculo en x1 y x2
+            x1= ( b+raiz )/a;
+            x2= ( b-raiz )/a;
+            ctx.strokeStyle= "#FF0000";
+            ctx.lineWidth = 1;   // grosor de la linea
+            ctx.strokeStyle = "#f00";
+            ctx.beginPath();
+            ctx.moveTo(x1, 0);
+            ctx.lineTo(x1, HEIGHT);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x2, 0);
+            ctx.lineTo(x2, HEIGHT);
+            ctx.stroke();
+            
+            //4.encontrar y1 y2 y3 y4 y punto(s) de interseccion
+            puntos1[0]= new Punto(x1, partY(h,k,r,x1)+k);
+            puntos1[1]= new Punto(x1, -partY(h,k,r,x1)+k);
+            puntos1[2]= new Punto(x2, partY(h,k,r,x2)+k);
+            puntos1[3]= new Punto(x2, -partY(h,k,r,x2)+k);
+
+            puntos2[0]= new Punto(x1, partY(j,p,n,x1)+p);
+            puntos2[1]= new Punto(x1, -partY(j,p,n,x1)+p);
+            puntos2[2]= new Punto(x2, partY(j,p,n,x2)+p);
+            puntos2[3]= new Punto(x2, -partY(j,p,n,x2)+p);
+
+            
+
+
+            // document.querySelector("#rectC").innerHTML= "Datos C: "+
+            // "<br>"+"x: "+C[0]+
+            // "<br>"+"y:"+C[1]+
+            // "<br>"+"Ancho: "+C[2]+
+            // "<br>"+"Largo: "+C[3]+
+            // "<br>";     
+        }
+        function partY(h,k,r,x) {//parte para hayar y que se reutiliza
+            return Math.sqrt( Math.pow(r,2) - Math.pow(x,2) + 2*h*x - Math.pow(h,2) );
+        }
+        function pintarCircunferencia(h,k,r,color) {
+            // ang=0;
+            // while(ang!=360){
+            //     ctx.beginPath();ctx.save();
+            //     ctx.fillStyle = color;  //color por dentro
+            //     ctx.strokeStyle = color;    // color prueba
+            //     ctx.arc(h+Math.cos(ToRad(ang)*r), k-Math.sin(ToRad(ang)*r),1,0,2*Math.PI);
+            //     ctx.fill();
+            //     ang+=1;
+            //     console.log(ang);
+            // }
+            for (let x = h-r; x <= h+r;) {
+                if(x < h-r+(h+r)/77 || x > h+r-(h+r)/77) x+=0.004;
+                else x+=0.1;
+                ctx.beginPath();ctx.save();
+                ctx.fillStyle = color;  //color por dentro
+                ctx.strokeStyle = color;    // color prueba
+                ctx.arc(x,planoC(Math.sqrt(r*r-(x-h)*(x-h))+k),0.2,0,2*Math.PI);
+                ctx.arc(x,planoC(-Math.sqrt(r*r-(x-h)*(x-h))+k),0.2,0,2*Math.PI);
+                ctx.fill();
+            }
+        }
+
+		function interseccion(A, B){
+            let C= [];
+            for(let i=0; i<4; i++) C[i]= 0;
+            
+            for (var i = 0; i < 2; i++) {
+                if(A[0]<=B[0] && A[0]+A[2]>=B[0]){//A.x < B.x y A.x+ancho>B.x
+                    if(A[1]<=B[1] && B[1]-B[3]<=A[1]){//A.y < B.y y  B.y-largo<A.y
+                        C[0]= B[0];
+                        C[1]= A[1];
+                        
+                        if(A[0]+A[2]>=B[0]+B[2]) C[2]= B[2];
+                        if(A[0]+A[2]<=B[0]+B[2]) C[2]= A[2]-(B[0]-A[0]);
+                        
+                        if(B[1]-B[3]>=A[1]-A[3]) C[3]= B[3]-(B[1]-A[1]); //B.y-largo > A.y-largo
+                        if(B[1]-B[3]<=A[1]-A[3]) C[3]= A[3]; //B.y-largo < A.y-largo
+                    }
+                    if(B[1]<=A[1] && A[1]-A[3]<=B[1]){ //A.y > B.y
+                        C[0]= B[0];
+                        C[1]= B[1];
+                        
+                        if(A[0]+A[2]>=B[0]+B[2]) C[2]= B[2];
+                        if(A[0]+A[2]<=B[0]+B[2]) C[2]= A[2]-(B[0]-A[0]);
+                        
+                        if(B[1]-B[3]>=A[1]-A[3]) C[3]= B[3]; //B.y-largo > A.y-largo
+                        if(B[1]-B[3]<=A[1]-A[3]) C[3]= A[3]-(A[1]-B[1]); //B.y-largo < A.y-largo
+                    }
+                }
+                let aux= A;
+                A= B;
+                B= aux;
+            }
+            return C;
+        }
+
+        function cambiarValor(A, B) {
+            let aux= A;
+            A= B;
+            B= aux;
+        }
+        
+        function ToAngulo(rad){
+        	return rad*180/Math.PI;
+        }
+
+        function ToRad(angulo){
+            return angulo*Math.PI/180;
+        }
+
+        function valorAbs(x){
+        	if(x<0) return -x;
+        	return x;
+        }
+
+        function planoC(y){
+        	return HEIGHT-y;
+        }
+	</script>
+</body>
+</html>

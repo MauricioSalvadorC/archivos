@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lanzamiento Interplanetario</title>
+    <style>
+        canvas{
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="700" height="550" style="border: solid #000; background-color: rgb(255, 255, 255);"></canvas>
+    <button onclick="sw=1">nave</button>
+    <button onclick="sw=2">asteroide</button>
+    <button onclick="sw=3">planeta</button>
+
+    <script type="text/javascript">
+        let canvas= document.querySelector("#canvas");
+        let ctx= canvas.getContext("2d");
+
+        // ciclo infinito
+        let principal = setInterval(()=>{ main() },10);
+
+        let WIDTH= 700; let HEIGHT=550;
+        
+        class Nave{
+            constructor(x,y,r,vx,vy, color){
+                this.x= x;
+                this.y= y;
+                this.r= r;
+                this.vx= vx;
+                this.vy= vy;
+                this.color= color;
+            }
+        }
+        class Asteroide{
+            constructor(x,y,r,vx,vy, color){
+                this.x= x;
+                this.y= y;
+                this.r= r;
+                this.vx= vx;
+                this.vy= vy;
+                this.color= color;
+            }
+        }
+        class Planeta{
+            constructor(x,y,r, color){
+                this.x= x;
+                this.y= y;
+                this.r= r;
+                this.color= color;
+            }
+        }
+        
+        let sw = 3, pressed = false, aum = 0.3;
+        let x1=0, y1=0, x2=0, y2=0;
+        let disVel;
+
+        naves = [];
+        asteroides = [];
+        planetas = [];
+
+        //planetas.push(new Planeta(200, 200, 50));
+        let borrar=0;
+        function main(){  
+            borrar++;
+            if(borrar==100){
+                canvas= document.querySelector("#canvas");
+        let ctx= canvas.getContext("2d");
+                borrar= 0;
+            }
+            if(!pressed){
+                //acelerar
+                for(let i=0; i<naves.length; i++){
+                    for(let j=0; j<asteroides.length; j++){
+                        disVel= Math.sqrt( Math.pow(asteroides[j].x-naves[i].x,2)
+                                + Math.pow(asteroides[j].y-naves[i].y,2) );
+                                // mag= Math.sqrt( Math.pow(x1-x2,2)
+                                // + Math.pow(y1-y2,2) );
+                                // ux= (x1-x2)/mag;
+                                // uy= (y1-y2)/mag;
+                        if(disVel>5){
+                            naves[i].vx+= (asteroides[j].x-naves[i].x)*asteroides[j].r**2/(asteroides[j].r/2)**2/disVel**2/1;
+                            naves[i].vy+= (asteroides[j].y-naves[i].y)*asteroides[j].r**2/(asteroides[j].r/2)**2/disVel**2/1;
+                        }
+                    }
+                    for(let j=0; j<planetas.length; j++){
+                        disVel= Math.sqrt( Math.pow(planetas[j].x-naves[i].x,2)
+                                + Math.pow(planetas[j].y-naves[i].y,2) );
+                        if(disVel>5){
+                            naves[i].vx+= (planetas[j].x-naves[i].x)*planetas[j].r**2/(planetas[j].r/2)**2/disVel**2/1;
+                            naves[i].vy+= (planetas[j].y-naves[i].y)*planetas[j].r**2/(planetas[j].r/2)**2/disVel**2/1;
+                        }
+                    }   
+                }
+                for(let i=0; i<asteroides.length; i++){
+                    for(let j=0; j<asteroides.length; j++){    
+                        if(i!=j){
+                            disVel= Math.sqrt( Math.pow(asteroides[j].x-asteroides[i].x,2)
+                                    + Math.pow(asteroides[j].y-asteroides[i].y,2) );
+                            if(disVel>5){
+                                asteroides[i].vx+= (asteroides[j].x-asteroides[i].x)*asteroides[j].r**2/(asteroides[j].r/2)**2/disVel**2/1;
+                                asteroides[i].vy+= (asteroides[j].y-asteroides[i].y)*asteroides[j].r**2/(asteroides[j].r/2)**2/disVel**2/1;        
+                            }
+                        }
+                    }
+                    for(let j=0; j<planetas.length; j++){
+                        disVel= Math.sqrt( Math.pow(planetas[j].x-asteroides[i].x,2)
+                                + Math.pow(planetas[j].y-asteroides[i].y,2) );
+                        if(disVel>5){
+                            asteroides[i].vx+= (planetas[j].x-asteroides[i].x)*planetas[j].r**2/(planetas[j].r/2)**2/disVel**2/1;
+                            asteroides[i].vy+= (planetas[j].y-asteroides[i].y)*planetas[j].r**2/(planetas[j].r/2)**2/disVel**2/1;
+                        }
+                    }   
+                }
+                //mover
+                for(let i=0; i<naves.length; i++){
+                    naves[i].x+= naves[i].vx;
+                    naves[i].y+= naves[i].vy;
+                }
+                for(let i=0; i<asteroides.length; i++){
+                    asteroides[i].x+= asteroides[i].vx;
+                    asteroides[i].y+= asteroides[i].vy;
+                }
+            }
+            pintar();
+
+            if(sw == 2 && pressed){
+                asteroides[asteroides.length-1].r+= aum;
+            }
+            if(sw == 3 && pressed){
+                planetas[planetas.length-1].r += aum;       
+            }
+        }
+
+        function pintar(){
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle= "#ffffff10";
+            for(let i=0; i<naves.length; i++){
+                pintarBola(naves[i]);
+            }
+            for(let i=0; i<planetas.length; i++){
+                pintarBola(planetas[i]);
+            }
+            for(let i=0; i<asteroides.length; i++){
+                pintarBola(asteroides[i]);
+            }
+            if(sw!=3 && pressed){
+                pintarLinea(x1,y1,x2,y2);
+            }
+        }
+
+        // ****** EVENTOS *********
+        let x_p, y_p; // X.Y DEL MOUSE
+
+        // EVENTO MOUSEDOWN -----------------------------
+        canvas.addEventListener("mousedown",(evt)=>{   // detecta cuando das click 
+            evt.preventDefault();
+            x_p = evt.clientX-10;
+            y_p = evt.clientY-10;
+            //console.log("empezo a dibujar");
+            
+            x1 = x_p;
+            y1 = y_p;
+
+            if(sw == 1){
+                naves.push(new Nave(x1,y1,3,0,0,"rgb("+random(0,255)+","+random(0,255)+","+random(0,255)+")"));
+            }else if(sw == 2){
+                asteroides.push(new Asteroide(x1,y1,6,0,0,"rgb("+random(0,255)+","+random(0,255)+","+random(0,255)+")"));
+            }else{
+                planetas.push(new Planeta(x1,y1,10,"rgb("+random(0,255)+","+random(0,255)+","+random(0,255)+")"));
+            }
+            pressed = true;
+        }, false);
+
+        // EVENTO MOUSEMOVE ----------------------------
+        canvas.addEventListener("mousemove",(evt)=>{   // detecta cuando el mouse se mueve 
+            evt.preventDefault();  
+            x_p = evt.clientX-10;
+            y_p = evt.clientY-10;
+
+            x2 = x_p;
+            y2 = y_p;
+            //console.log("dibujando...");
+        }, false);
+
+        // EVENTO MOUSEUP ------------------------------
+        canvas.addEventListener("mouseup",(evt)=>{     // detecta cuando deja de presionar
+            evt.preventDefault();
+            x_p = evt.clientX-10;
+            y_p = evt.clientY-10;
+
+            x2 = x_p;
+            y2 = y_p;
+
+            if(sw == 1){
+                naves[naves.length-1].vx= (x2-x1)/50;
+                naves[naves.length-1].vy= (y2-y1)/50;
+            }
+            if(sw == 2){
+                asteroides[asteroides.length-1].vx= (x2-x1)/50;
+                asteroides[asteroides.length-1].vy= (y2-y1)/50;
+            }
+            //console.log("dejo de dibujar");
+            pressed = false;
+            //aum*=-1;
+
+        }, false);
+
+        
+
+        function pintarBola(bola) {
+
+            ctx.beginPath();
+            //ctx.fillStyle = "#FF0000";  //color por dentro
+            ctx.strokeStyle = bola.color;    // color prueba
+            ctx.arc(bola.x, (bola.y), bola.r, 0, 2*Math.PI);
+            ctx.stroke();
+        }
+        function pintarLinea(x1,y1,x2,y2) {
+            ctx.lineWidth = 2;   // grosor de la linea
+            ctx.strokeStyle= "#ff000010";
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+        }
+
+        function ToAngulo(rad){
+            return rad*180/Math.PI;
+        }
+
+        function ToRad(angulo){
+            return angulo*Math.PI/180;
+        }
+
+        function valorAbs(x){
+            if(x<0) return -x;
+            return x;
+        }
+
+        // Retorna un número aleatorio entre min (incluido) y max (excluido)
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function planoC(y){
+            return HEIGHT-y;
+        }
+    </script>
+</body>
+</html>

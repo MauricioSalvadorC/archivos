@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>paint</title>
+    <style>
+        body{
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="700" height="550" style="border: solid #000;"></canvas>
+    
+    <!-- <span id="datos"></span> -->
+    <input onchange="preview()" type="color" name="" id="pincelColor">
+
+    <div>
+        <button onclick="sw=1">pincel</button>
+        <button onclick="sw=2">torcidoPos</button>
+        <button onclick="sw=3">torcidoNega</button>
+        <button onclick="sw=4">spray</button>
+        
+        <input onchange="preview()" type="range" name="" id="rango" min="1" max="30" value="5">
+        <label for="rango" id="labelRango"></label>
+        <canvas id="preview" width="50" height="50" style="border: solid #000;"></canvas>
+    </div>
+    
+    <script type="text/javascript">
+        let canvas= document.querySelector("#canvas");
+        let ctx= canvas.getContext("2d");
+
+        let canvas2= document.querySelector("#preview");
+        canvas2.height= 50;
+        canvas2.width= 50;
+        let ctx2= canvas2.getContext("2d");
+        //let a= document.querySelector("#datos");
+        let labelRango= document.querySelector("#labelRango");
+        let rango= document.querySelector("#rango");
+        
+
+        let WIDTH= 700; let HEIGHT=550;
+
+        let pressed = false, sw=1;
+        let x1=0, y1=0, x2=0, y2=0, r=5;
+        preview();
+
+        function pintar(){
+            if(pressed){
+                pintarBola(x2,y2,1);
+            }
+        }
+        
+
+        function preview(){
+            canvas2.height= canvas2.height;
+            ctx2.beginPath(); ctx2.save();
+            ctx2.fillStyle = document.querySelector("#pincelColor").value;  //color por dentro
+            //ctx2.strokeStyle = "#ffffff";    // color prueba
+            ctx2.arc(25, 25, rango.value, 0, 2*Math.PI);
+            ctx2.fill();
+
+            ctx2.beginPath();ctx2.save();
+            ctx2.lineWidth= 1;
+            //ctx2.fillStyle = "#FF0000";  //color por dentro
+            ctx2.strokeStyle = "black";    // color prueba
+            ctx2.arc(25, 25, rango.value, 0, 2*Math.PI);
+            ctx2.stroke();
+            r= parseInt(rango.value);
+            labelRango.innerHTML= r;
+        }
+
+        function pintarBola(x,y,r) {
+            ctx.beginPath();ctx.save();
+            ctx.fillStyle = document.querySelector("#pincelColor").value;  //color por dentro
+            // ctx.strokeStyle = "#ffffff";    // color prueba
+            ctx.arc(x, y, r, 0, 2*Math.PI);
+            ctx.fill();
+        }
+        function pintarLinea(x1,y1,x2,y2, ope) {
+            let m= (y2-y1)/(x2-x1);
+            let y, x;
+            if(x1==x2){
+                if(y1<y2){
+                    for(y=y1; y<=y2; y++){
+                        if(ope==1) pintarBola(x1,y,r)
+                        else if(ope==2) pLine(x1-r,y+r,x1+r,y-r) 
+                        else if(ope==3) pLine(x1+r,y+r,x1-r,y-r)
+                    }
+                }else{
+                    for(y=y2; y<=y1; y++){
+                        if(ope==1) pintarBola(x1,y,r)
+                        else if(ope==2) pLine(x1-r,y+r,x1+r,y-r)
+                        else if(ope==3) pLine(x1+r,y+r,x1-r,y-r) 
+                    }
+                }
+            }
+            if(y1<y2){
+                if(x1<x2){
+                    if(m>1){
+                        for(y=y1; y<y2; y++){
+                            x= ( y-y1+m*x1 )/m;
+                            if(ope==1) pintarBola(x,y,r)
+                            else if(ope==2) pLine(x-r,y+r,x+r,y-r) 
+                            else if(ope==3) pLine(x+r,y+r,x-r,y-r)
+                        }
+                    }else{
+                        for(x=x1; x<x2; x+=1){  
+                            y= m*(x-x1)+y1;
+                            if(ope==1) pintarBola(x,y,r)
+                            else if(ope==2) pLine(x-r,y+r,x+r,y-r) 
+                            else if(ope==3) pLine(x+r,y+r,x-r,y-r) 
+                        }
+                    }
+                }else{
+                    if(m<-1){
+                        for(y=y1; y<y2; y++){
+                            x= ( y-y1+m*x1 )/m;
+                            if(ope==1) pintarBola(x,y,r)
+                            else if(ope==2) pLine(x-r,y+r,x+r,y-r) 
+                            else if(ope==3) pLine(x+r,y+r,x-r,y-r) 
+                        }
+                    }else{
+                        for(x=x2; x<x1; x+=1){  
+                            y= m*(x-x1)+y1;
+                            if(ope==1) pintarBola(x,y,r)
+                            else if(ope==2) pLine(x-r,y+r,x+r,y-r) 
+                            else if(ope==3) pLine(x+r,y+r,x-r,y-r) 
+                        }
+                    }
+                }
+            }else{
+                if(x1<x2){
+                    if(m<-1){
+                        for(y=y2; y<y1; y++){
+                            x= ( y-y1+m*x1 )/m;
+                            if(ope==1) pintarBola(x,y,r)
+                            else if(ope==2) pLine(x-r,y+r,x+r,y-r) 
+                            else if(ope==3) pLine(x+r,y+r,x-r,y-r) 
+                        }
+                    }else{
+                        for(x=x1; x<x2; x+=1){  
+                            y= m*(x-x1)+y1;
+                            if(ope==1) pintarBola(x,y,r)
+                            else if(ope==2) pLine(x-r,y+r,x+r,y-r) 
+                            else if(ope==3) pLine(x+r,y+r,x-r,y-r) 
+                        }
+                    }
+                }else{
+                    if(m>1){
+                        for(y=y2; y<y1; y++){
+                            x= ( y-y1+m*x1 )/m;
+                            if(ope==1) pintarBola(x,y,r)
+                            else if(ope==2) pLine(x-r,y+r,x+r,y-r) 
+                            else if(ope==3) pLine(x+r,y+r,x-r,y-r) 
+                        }
+                    }else{
+                        for(x=x2; x<x1; x+=1){  
+                            y= m*(x-x1)+y1;
+                            if(ope==1) pintarBola(x,y,r)
+                            else if(ope==2) pLine(x-r,y+r,x+r,y-r) 
+                            else if(ope==3) pLine(x+r,y+r,x-r,y-r) 
+                        }
+                    }
+                }
+            }
+        }
+        // pLine(100-30,100+30,100+30,100-30)
+        // pintarBola(100,100,5)
+        // pLine(30,10,40,20)
+        function pLine(x1,y1,x2,y2) {
+            ctx.lineWidth = 1;   // grosor de la linea
+            ctx.strokeStyle= document.querySelector("#pincelColor").value;
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+        }
+
+        function spray(x,y) {
+            let ay;
+            // console.log(r);
+            for(let i=-r; i<r; i++){
+                pintarBola(i+x, Math.sqrt(r**2-i**2)*random(0,1)+y, 0.5)
+                pintarBola(i+x, -Math.sqrt(r**2-i**2)*random(0,1)+y, 0.5)
+            } 
+        }
+
+        // EVENTO MOUSEDOWN -----------------------------
+        canvas.addEventListener("mousedown",(evt)=>{   // detecta cuando das click 
+            pressed = true;
+            evt.preventDefault();
+            x1 = evt.clientX-10;
+            y1 = evt.clientY-10;
+            if(sw==1) pintarBola(x1,y1,r);
+            else if(sw==2) pLine(x1-r,y1+r,x1+r,y1-r)
+            else if(sw==3) pLine(x1+r,y1+r,x1-r,y1-r)
+            else if(sw==4) spray(x1,y1)
+            //console.log("causa")
+            // pintarLinea(0,0,200,380);
+            
+        }, false);
+
+        // EVENTO MOUSEMOVE ----------------------------
+        canvas.addEventListener("mousemove",(evt)=>{   // detecta cuando el mouse se mueve 
+            evt.preventDefault();  
+            x2 = evt.clientX-10;
+            y2 = evt.clientY-10;
+            if(pressed){
+                if(sw!=4) pintarLinea(x1,y1,x2,y2, sw);
+                else if(sw==4) spray(x1,y1,r)
+                x1= x2;
+                y1= y2;
+            }
+            //console.log("dibujando...");
+        }, false);
+
+        // EVENTO MOUSEUP ------------------------------
+        canvas.addEventListener("mouseup",(evt)=>{     // detecta cuando deja de presionar
+            evt.preventDefault();
+            x2 = evt.clientX-10;
+            y2 = evt.clientY-10;
+
+            // a.innerHTML=  "x1= "+x1+" y1= "+y1+"<br/>"
+            //             + "x2= "+x2+" y2= "+y2+"<br/>"
+            //             + "m= "+((y2-y1)/(x2-x1));
+            
+            pressed = false;
+        }, false);
+
+        function ToAngulo(rad){
+            return rad*180/Math.PI;
+        }
+
+        function ToRad(angulo){
+            return angulo*Math.PI/180;
+        }
+
+        function valorAbs(x){
+            if(x<0) return -x;
+            return x;
+        }
+
+        // Retorna un número aleatorio entre min (incluido) y max (excluido)
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function planoC(y){
+            return HEIGHT-y;
+        }
+    </script>
+</body>
+</html>

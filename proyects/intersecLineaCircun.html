@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caida Rectabgular</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        main{
+            background: rgb(199,183,183);
+            background: radial-gradient(circle, rgba(199,183,183,1) 20%, rgba(0,0,0,0.8919051995798319) 100%);
+            display: flex;
+            
+            min-height: 100vh;
+            padding: 0px 100px;
+            justify-content: space-evenly; /* center horizontal*/
+            align-items: center; /* center verticalmente */
+            flex-wrap: wrap;
+        }
+        #canvas{
+            background-color: rgb(255, 255, 255);
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div>
+            <canvas id="canvas" width="700" height="550" style="border: solid #000;"></canvas>
+        </div>
+        <div><label for="canvas">causa</label></div>
+    </main>
+    <script>
+        let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+
+        let tumae = setInterval(()=>{ main()},1);
+        WIDTH= 700; HEIGHT=550;
+
+        class Rect{
+			constructor(x,y,n, color){
+				this.x= x;
+				this.y= y;
+				this.n= n; 
+                this.color= color;
+			}
+		}
+        
+        let dist= window.screen.width;
+        let x1=0,y1=0,x2=400,y2=400,pressed;
+        let h=200, k=250, r=100, m, c;
+
+        function main(){
+            canvas.width= canvas.width;
+            ctx.lineWidth = 2;   // grosor de la linea
+            ctx.strokeStyle= "#ff0000ee";
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+
+           pintarCirculo(h,k,r);
+
+            m=(y2-y1)/(x2-x1);
+            c= -m*x1+y1-k;
+            let x1i= (-h+m*c+Math.sqrt(r**2+m**2*r**2-m**2*h**2-2*m*c*h-c**2))/(-1-m**2);
+            let raiz=Math.sqrt((r*r)+(m*m*r*r)-(m*m*h*h)-(2*m*c*h)-(c*c))
+	        let x2i=(-h+m*c-(raiz))/-(m*m+1);
+
+            // document.querySelector("label").innerHTML= "("+x1i+","+yRect(x1,y1,x2,y2,x1i)+")"+"<br>"+
+            // "("+x2i+","+yRect(x1,y1,x2,y2,x2i)+")"+"<br>";
+            // pintarCirculo(x1i,yRect(x1,y1,x2,y2,x1i),5);
+            // pintarCirculo(x2i,yRect(x1,y1,x2,y2,x2i),5);
+            pintarInter(x1i, yRect(x1,y1,x2,y2,x1i));
+            pintarInter(x2i, yRect(x1,y1,x2,y2,x2i));
+        }
+
+        function yRect(x1,y1,x2,y2,x) {
+            m=(y2-y1)/(x2-x1);
+            return m*(x-x1)+y1;
+        }
+
+        function pintarInter(x1i,y1i) {
+            if(!((x1 < x1i  && x1i > x2)||
+                (x1 > x1i  && x1i < x2))&&
+				!((y1 > y1i  && y1i < y2)||
+				(y1 < y1i  && y1i > y2))) 
+                pintarCirculo(x1i,y1i,5);
+        
+        }
+
+        function pintarCirculo(h,k,r) {
+            ctx.beginPath();ctx.save();
+            ctx.fillStyle = "#ff0000ee";  //color por dentro
+            ctx.strokeStyle = "#ff0000ee";    // color prueba
+
+            ctx.arc(h, k, r, 0, 2*Math.PI);
+            ctx.stroke();
+        }
+        //funcion rectangulos
+
+
+
+        // EVENTO MOUSEDOWN -----------------------------
+        canvas.addEventListener("mousedown",(evt)=>{   // detecta cuando das click 
+            x1 = evt.layerX;
+            y1 = evt.layerY;
+            //console.log("empezo a dibujar");
+      
+            pressed = true;
+        }, false);
+
+        // EVENTO MOUSEMOVE ----------------------------
+        canvas.addEventListener("mousemove",(evt)=>{   // detecta cuando el mouse se mueve 
+            
+            x2 = evt.layerX;
+            y2 = evt.layerY;
+
+            //if(sw==2) pintarLinea(x1,y1,x2,y2);
+            //console.log("dibujando...");
+        }, false);
+
+        // EVENTO MOUSEUP ------------------------------
+        canvas.addEventListener("mouseup",(evt)=>{     // detecta cuando deja de presionar
+           
+            x2 = evt.clientX;
+            y2 = evt.clientY;
+
+            
+            //console.log("dejo de dibujar");
+            pressed = false;
+        }, false);
+
+        // CONVERTIR pendiente a grados
+        function pendtoGrado(m){
+            return Math.atan(m)*180/Math.PI;
+        }
+        
+        function ToAngulo(rad){
+        	return rad*180/Math.PI;
+        }
+
+        // Retorna un número aleatorio entre min (incluido) y max (incluido)
+        function random(min, max) {
+            return Math.random() * (max - min) + min + 1;
+        }
+
+        function ToRad(angulo){
+            return angulo*Math.PI/180;
+        }
+
+        function valorAbs(x){
+        	if(x<0) return -x;
+        	return x;
+        }
+
+        function planoC(y){
+        	return HEIGHT-y;
+        }
+    </script>
+</body>
+</html>

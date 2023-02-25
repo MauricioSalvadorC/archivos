@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArbolRevursivo</title>
+    <style>
+        html + body{
+            width: 100vw;
+            height: 100vh;
+        }
+        *{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        #canvas{
+            /* margin: 10px; */
+            width: 100vw;
+            height: 100vh;
+            /* border: 1px solid rgb(255, 0, 0);  */
+            background-color:rgb(0, 0, 0)
+        }
+    </style>
+    
+</head>
+<body>
+    <canvas width="500px" height="500px" id="canvas" ></canvas>
+
+    <script>    
+        let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+        canvas.width= window.innerWidth-30;
+        canvas.height= window.innerHeight-30;
+
+        let my= canvas.height/2, mx= canvas.width/2;
+        let v=[];
+        setInterval(()=>{ main()},1);
+
+        let decre=20; 
+        let largo= 1000;
+        function main(){
+            canvas.width= canvas.width;
+            //angulo
+            print(mx, my, largo, 1, 90, decre, 7, 2); //0.8cuadro 0.7triangulo 0.65arbol
+            decre+=0.03;
+            largo+=0.01;
+        }
+
+        // let decre=0; 
+        // let largo= 1;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, largo, 2, 90, decre, 7, 2); //0.8cuadro 0.7triangulo 0.65arbol
+        //     decre+=0.1;
+        //     largo+=0.01;
+        // }
+
+        // let decre=40; 
+        // let largo= 3000;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, largo, 1, 90, decre, 14); //0.8cuadro 0.7triangulo 0.65arbol
+        //     decre+=0.02;
+        //     largo+=0.01;
+        // }
+
+        // let decre=0; 
+        // let largo= 100;
+        // my= canvas.height-100;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, largo, 0.85, 90, decre, 13); //0.8cuadro 0.7triangulo 0.65arbol
+        //     decre+=0.2;
+        //     my-= 0.1;
+        // }
+
+        // pintarArbolRecursivo(mx, my, 80, 0.8, 90, 0, 10);
+        // pintarArbolRecursivo(970, 700, 80, 0.8, 90, 25, 15);
+        // pintarArbolRecursivo(550, 550, 80, 0.7, 90, 30, 15);
+        // pintarArbolRecursivo(200, 550, 80, 0.75, 90, 30, 15);
+        // print(mx, my, 300, 1, 90, 150, 14); //0.8cuadro 0.7triangulo 0.65arbol
+
+        // let decre=0; 
+        // let largo= 140;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, largo, 0.7, 90, decre, 14); //0.8cuadro 0.7triangulo 0.65arbol
+        //     decre+=0.4;
+        //     largo+=0.4;
+        // }
+
+        // let decre=0; 
+        // let largo= 140;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, largo, 1, 90, 150, 14); //0.8cuadro 0.7triangulo 0.65arbol
+        //     decre++;
+        //     largo+=1;
+        // }
+
+        // let decre=0; 
+        // let largo= 50;my=canvas.height/2+40;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, largo, 1, 90, decre, 14); //0.8cuadro 0.7triangulo 0.65arbol
+        //     decre+=0.1;
+        //     largo+=0;
+        // }
+        // let decre=40; 
+        // let largo= 150;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, largo, 1, 90, decre, 13); //0.8cuadro 0.7triangulo 0.65arbol
+        //     decre+=0.2;
+        // }
+        // let largo= 0, decre=0;
+        // my= canvas.height-100, mx= canvas.width/2;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, largo, 0.8, 90, decre, 13); //0.8cuadro 0.7triangulo 0.65arbol
+        //     if(largo<=108) largo+=0.5;
+        //     if(decre<=28) decre+=0.125;   
+        // }
+        // let largo = 0 ;
+        // function main(){
+        //     canvas.width= canvas.width;
+        //     //angulo
+        //     print(mx, my, 340, 1, 90, 150, largo++); //0.8cuadro 0.7triangulo 0.65arbol
+        // }
+
+        function pintarLinea(x1,y1,x2,y2,color) {
+            ctx.lineWidth = 1;   // grosor de la linea
+            ctx.strokeStyle= color;
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+        }
+        
+        function print(x, y, largo, k, ang, decre, nivel, numHijos){
+            v.splice(0, v.length);
+            // v.push("rgba(0,0,255,0.6)")
+            // let r=255, g=0, b=0, turn= 1;
+            // for(let i=1; i<=1275; i++){
+            //     if(i%parseInt(1275/nivel)==nivel){
+            //         v.push("rgba("+r+","+g+","+b+",0.6)");
+            //     }
+            //     if(turn==1){
+            //         g++;
+            //         if(g==255) turn=2;
+            //     }
+            //     if(turn==2){
+            //         r--;
+            //         if(r==0) turn=3;
+            //     }
+            //     if(turn==3){
+            //         b++;
+            //         if(b==255) turn=4;
+            //     }
+            //     if(turn==4){
+            //         g--;
+            //         if(g==0) turn=5;
+            //     }
+            // }
+            //////////////////////////////////////////////////////
+            // let min= 0, max= 200;
+            // let r=max, g=min, b=min, turn= 1;
+            // for(let i=1; i<=(max-min+1)*4; i++){
+            //     if(i%parseInt((max-min+1)*4/nivel)==nivel){
+            //         v.push("rgba("+r+","+g+","+b+",0.6)");
+            //     }
+            //     if(turn==1){
+            //         g++;
+            //         if(g==max) turn=2;
+            //     }
+            //     if(turn==2){
+            //         r--;
+            //         if(r==min) turn=3;
+            //     }
+            //     if(turn==3){
+            //         b++;
+            //         if(b==max) turn=4;
+            //     }
+            //     if(turn==4){
+            //         g--;
+
+            //         if(g==min) turn=5;
+            //     }
+            //}
+            let min= 50, max= 255, turn= 4;//medio  final   principio
+            let vrgb=[min,min,min], cont=1, pos=1, aux1=2, aux2= 0;//cambiar  pos-aux1-aux2 con diferentes digitos del 0 al 2 para cambiar la gama de colores
+            vrgb[aux1]= max;
+            for(let i=1; i<=(max-min+1)*4; i++){
+                if(i%parseInt((max-min+1)*4/nivel)==nivel){ //0: max 1:min 2:min  1++, 0--, 2++, 1--
+                    v.push("rgba("+vrgb[0]+","+vrgb[1]+","+vrgb[2]+",0.8)");
+                }
+                vrgb[pos]+=cont;
+                if(vrgb[pos]==min || vrgb[pos]==max){
+                    if((pos==0 && aux1==1)||(pos==1 && aux1==0)) aux2= 2;
+                    else if((pos==0 && aux1==2)||(pos==2 && aux1==0)) aux2= 1;
+                    else aux2= 0;
+                    pos= aux1;
+                    aux1= aux2; 
+                    cont*=-1;
+                }
+            }
+            pintarArbolRecursivo(mx, my, largo, k, ang, decre, nivel, numHijos);
+        }
+        function pintarArbolRecursivo(x, y, largo, k, ang, decre, nivel, numHijos){//k reduccion del largo (0-1)
+            if(nivel==0) return;
+            let rad= Math.PI*ang/180;
+            let x2= x+Math.cos(rad)*largo;
+            let y2= y-Math.sin(rad)*largo;
+            pintarLinea(x, y, x2, y2, v[nivel-1]);
+            for(let i=1; i<=numHijos; i++) pintarArbolRecursivo(x2, y2, largo*k, k, ang+i*decre, decre, nivel-1, numHijos);
+            for(let i=1; i<=numHijos; i++) pintarArbolRecursivo(x2, y2, largo*k, k, ang-i*decre, decre, nivel-1, numHijos);
+            //espejo
+            // pintarArbolRecursivo(x2, y2, largo*k, k, ang+decre, decre, nivel-1, numHijos);
+            // pintarArbolRecursivo(x2, y2, largo*k, k, ang-decre, decre, nivel-1, numHijos);
+            // pintarArbolRecursivo(x2, y2, largo*k, k, ang+(180-decre), decre, nivel-1, numHijos);
+            // pintarArbolRecursivo(x2, y2, largo*k, k, ang-(180-decre), decre, nivel-1, numHijos);
+        }
+        function addcad(v){
+            cad="";
+            for(let i = 0; i <v.length; i++){
+                cad+= v[i]+"\n";
+            }
+            return cad;
+        } 
+       `diccionario = {'.-' : 'A', '-...' : 'B', '-.-.' : 'C', '-..' : 'D',
+         '.' : 'E', '..-.' : 'F', '--.' : 'G', '....' : 'H', '..' : 'I', '.---' : 'J',
+          '-.-' : 'K', '.-..' : 'L', '--' : 'M', '-.' : 'N', '---' : 'O', '.--.' : 'P',
+          '--.-' : 'Q', '.-.' : 'R', '...' : 'S', '-' : 'T', '..-' : 'U', '...-' : 'V',
+           '.--' : 'W', '-..-' : 'X', '-.--' : 'Y', '--..' : 'Z'
+        }`
+
+
+        function divs(cad) {
+            cade= [], aux="";
+            for(let i = 0; i < cad.length; i++){
+                if(i=='\n'){
+                    cade.push(`<div class="ace_line" style="height: 13px; top: 39px;"><span class="ace_comment">`+aux+`</span></div>`)
+                    aux="";
+                }else{
+                    aux+=cad[i];
+                }
+            }
+            return addcad(cade);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>library</title>
+    <style>
+        .active{
+            background: red;
+        }
+        .activo{
+            height: 200px;
+            width: 200px;
+            border: solid 1px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="700" height="550" style="border: solid #000;"></canvas>
+    <div class="activo"></div>
+    <div class="activo"></div>
+    <div class="activo"></div>
+    <div class="activo"></div>
+    <div class="activo"></div>
+    <script src="$.js"></script>
+    <script>
+        let canvas= new Canvas("#canvas");
+        // let canvas= new Canvas(); si solo se tiene uno
+        canvas.rect(...canvas.getResponsive(0.14285714285714285, 0.36363636363636365), ...canvas.getResponsive(0.14285714285714285, 0.18181818181818182),"red",true);
+        canvas.event("mousedown",(evt)=>{   // detecta cuando das click 
+            x1 = evt.layerX;
+            y1 = evt.layerY;
+            //console.log("empezo a dibujar");
+      
+            pressed = true;
+        });
+        $("body").append("causa");
+        $("body").css({
+            //meter css (meter en comillas) ej: "background": "red" 
+            "background": "green"
+        })
+        $(".activo").event("click",(event)=>{
+            //meter css (meter en comillas) ej: "background": "red" 
+            $(".activo").toggleClass("active");
+            console.log(event)
+        })
+        
+    </script>
+</body>
+</html>

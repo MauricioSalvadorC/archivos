@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>trigonometria</title>
+	<style>
+		canvas{
+			display: block;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="canvas" width="700" height="550" style="border: solid #000;"></canvas>
+    ingrese caso: <input type="text" id="caso" placeholder="caso"><br>
+    <button onclick="incrementarAng()">lanzar</button>
+
+	<script type="text/javascript">
+		let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+
+		// ciclo infinito
+        //let tumae = setInterval(()=>{ pintarBola()},10);
+        console.log("atan(-2)= "+Math.atan(2)*180/Math.PI);
+        console.log("asin(-2)= "+Math.asin(0.761577311)*180/Math.PI);
+
+        let centroX= 350;
+        let centroY= 275;
+
+		WIDTH= 700; HEIGHT=550;
+        let largo= 100, ang= 0;
+
+        function incrementarAng() {
+            canvas.width= canvas.width;
+
+            ctx.strokeStyle= "#000000";
+            ctx.lineWidth = 3;   // grosor de la linea
+            ctx.beginPath();
+            ctx.moveTo(centroX, centroY);
+            ctx.lineTo(centroX-100, centroY+100);
+            ctx.stroke();
+        }
+	</script>
+</body>
+</html>

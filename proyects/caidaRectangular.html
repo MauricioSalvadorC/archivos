@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>falling puzzle</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        /* main{
+            background: rgb(199,183,183);
+            background: radial-gradient(circle, rgba(199,183,183,1) 20%, rgba(0,0,0,0.8919051995798319) 100%);
+            display: flex;
+            
+            min-height: 100vh;
+            padding: 0px 100px;
+            justify-content: space-evenly; /* center horizontal*/
+            /*align-items: center;  center verticalmente */
+            /*flex-wrap: wrap;
+        } */
+        #canvas{
+            background-color: rgb(255, 255, 255);
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div>
+            <canvas id="canvas" width="700" height="550" style="border: solid #000;"></canvas>
+        </div>
+        <div><label for="canvas">0</label></div>
+    </main>
+    <script>
+        let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+
+        let tumae = setInterval(()=>{ main()},180);
+        WIDTH= 700; HEIGHT=550;
+
+        class Rect{
+			constructor(x,y,n, color){
+				this.x= x;
+				this.y= y;
+				this.n= n; 
+                this.color= color;
+			}
+		}
+        
+        // let dist= window.screen.width;
+        let x1=0,y1=0,x2=400,y2=400,grisx=0,pressed;
+        let filas= 10, colums= 8, separa= 50;
+        let rectangulos= [];
+        
+        
+        //pintar
+        let pif=10, pic=20; //posicion inicial en fila y en col
+        let px=0, select= false, posSelect;
+        let generarRan= false, score=0, finGame= false;
+
+        generarRects(3);
+        
+        function main(){
+            canvas.width= canvas.width;
+
+            pintarLineasH();
+            pintarLineasV();
+            for(let i=0; i<rectangulos.length; i++) {
+                if(pressed && x1>pif+rectangulos[i].x*separa && x1<pif+rectangulos[i].x*separa+rectangulos[i].n*separa
+                && y1>pic+rectangulos[i].y*separa && y1<pic+rectangulos[i].y*separa+separa){                    
+                    px= x2-(x1-(pif+rectangulos[i].x*separa));
+                    let pxMin= pif, pxMax= pif+colums*separa;
+
+                    for(let k=0; k<rectangulos.length; k++){
+                        if(rectangulos[k].y==rectangulos[i].y && rectangulos[k].x<rectangulos[i].x && pif+(rectangulos[k].x+rectangulos[k].n)*separa>pxMin) 
+                        pxMin = pif+(rectangulos[k].x+rectangulos[k].n)*separa;
+                    }
+                    if(px<pxMin) px=pxMin;
+
+                    for(let k=0; k<rectangulos.length; k++){
+                        if(rectangulos[k].y==rectangulos[i].y && rectangulos[k].x>rectangulos[i].x && pif+rectangulos[k].x*separa<pxMax) 
+                        pxMax = pif+rectangulos[k].x*separa;
+                    }
+                    if(px+rectangulos[i].n*separa>pxMax) px= pxMax-rectangulos[i].n*separa;
+
+                    for(let j=0; j<colums; j++){
+                        if(px < pif+j*separa+separa/2){
+                            grisx= pif+j*separa;
+                            if(px<pxMin) grisx=pxMin;
+                            ctx.fillStyle= "rgba(135,119,119,0.27)";
+                            ctx.fillRect(grisx, pic, rectangulos[i].n*separa, filas*separa);
+                            break;
+                        }
+                    }
+                }
+            }
+            // pintarJuego();
+            // console.log(bajando)
+            if(finGame==true){
+                gameOver();
+                finGame= false;
+            }
+            if(bajarRectangulos()==false){
+                if(borrar()==false && generarRan==true){
+                    for(let i=0; i<rectangulos.length; i++) rectangulos[i].y--; 
+                    generarRects(1);
+                    generarRan= false;
+                    finGame= true;
+                }
+            }
+            pintarJuego();
+        }
+        ///////////////////////////////////////
+        function generarRects(auxYanterior){
+            let auxX, auxN, maxN, auxY= filas-1;
+            while(auxY >= filas-auxYanterior){
+                auxX= 0, maxN=4;
+                while(auxX<colums){
+                    while(random(1,3)==2){
+                        auxX++;
+                    } 
+                    if(auxX<colums){
+                        if(auxX>colums-maxN) maxN= colums-auxX;
+                        auxN= random(1,maxN);
+                        
+                        rectangulos.push(new Rect(auxX, auxY, auxN, "rgb("+random(50,230)+","+random(50,230)+","+random(50,230)+")"))
+                        auxX+= auxN;
+                    }
+                }
+                auxY--;
+            }
+        }
+        function gameOver(){
+            for(let i=0; i<rectangulos.length; i++) if(rectangulos[i].y == 0) {
+                alert("score: "+score);
+                rectangulos.splice(0,rectangulos.length);
+                generarRan= false, score=0, finGame= false;
+                generarRects(3);
+            }
+        }
+        //pintarJuego()
+        function pintarJuego(){
+            for(let i=0; i<rectangulos.length; i++) {
+                if(pressed && x1>pif+rectangulos[i].x*separa && x1<pif+rectangulos[i].x*separa+rectangulos[i].n*separa
+                && y1>pic+rectangulos[i].y*separa && y1<pic+rectangulos[i].y*separa+separa){                    
+                    // if(x2-(x1-(pif+rectangulos[i].x*separa)) < ) mover gris de atras
+                    select= true;
+                    posSelect= i;
+                    
+                    ctx.fillStyle= rectangulos[i].color;
+                    ctx.fillRect(px, pic+rectangulos[i].y*separa, rectangulos[i].n*separa, separa);
+
+                    ctx.strokeStyle= "black";
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(px, pic+rectangulos[i].y*separa, rectangulos[i].n*separa, separa);
+                }else{
+                    pintarRect(rectangulos[i]);
+                }
+            }
+        }
+        
+        //funcion rectangulos
+        function borrar() {
+            let cont=0, b=false;
+            for(let j= filas-1; j>=0; j--){
+                cont=0;
+                for(let i=0; i<rectangulos.length; i++){
+                    if(rectangulos[i].y==j) cont+=rectangulos[i].n;    
+                }
+                if(cont==colums){
+                    borrarLinea(j);
+                    score++;
+                    document.querySelector("label").innerHTML= score;
+                    b=true;
+                }
+            }
+            return b;
+        }
+        function borrarLinea(b) {
+            for(let i=0; i<rectangulos.length; i++){
+                if(rectangulos[i].y==b){
+                    rectangulos.splice(i--,1)
+                }    
+            }
+        }
+        function bajarRectangulos() {
+            let b= false;
+            for(let j= filas-2; j>=0; j--){
+                for(let i=0; i<rectangulos.length; i++){
+                    if(rectangulos[i].y==j && puedeBajar(j+1,i)){
+                        rectangulos[i].y++;
+                        b= true;
+                    }    
+                }
+            }
+            return b;
+        }
+        function puedeBajar(b,pos) {            
+            for(let i=0; i<rectangulos.length; i++){
+                if( rectangulos[i].y==b && 
+                ((rectangulos[pos].x<rectangulos[i].x+rectangulos[i].n && rectangulos[pos].x>=rectangulos[i].x)
+                || (rectangulos[pos].x+rectangulos[pos].n>rectangulos[i].x && rectangulos[pos].x+rectangulos[i].n<=rectangulos[i].x+rectangulos[i].n)) )
+                return false;
+            }
+            return true;
+        }
+
+        //pintar
+        function pintarLineasH() {
+            for(let i=0; i<=filas; i++){
+                pintarLinea(pif, pic+i*separa, pif+colums*separa, pic+i*separa)
+            }
+        }
+        function pintarLineasV() {
+            for(let i=0; i<=colums; i++){
+                pintarLinea(pif+i*separa, pic, pif+i*separa, pic+filas*separa)
+            }
+        }
+        function pintarRect(rectangulo){
+            ctx.fillStyle= rectangulo.color;
+            ctx.fillRect(pif+rectangulo.x*separa, pic+rectangulo.y*separa, rectangulo.n*separa, separa);
+
+            ctx.strokeStyle= "black";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(pif+rectangulo.x*separa, pic+rectangulo.y*separa, rectangulo.n*separa, separa);
+        }
+        function pintarLinea(x1,y1,x2,y2) {
+            ctx.lineWidth = 2;   // grosor de la linea
+            ctx.strokeStyle= "black";
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+        }
+
+        // EVENTO MOUSEDOWN -----------------------------
+        canvas.addEventListener("mousedown",(evt)=>{   // detecta cuando das click 
+            x1 = evt.layerX;
+            y1 = evt.layerY;
+            //console.log("empezo a dibujar");
+      
+            pressed = true;
+        }, false);
+
+        // EVENTO MOUSEMOVE ----------------------------
+        canvas.addEventListener("mousemove",(evt)=>{   // detecta cuando el mouse se mueve 
+            
+            x2 = evt.layerX;
+            y2 = evt.layerY;
+
+            //if(sw==2) pintarLinea(x1,y1,x2,y2);
+            //console.log("dibujando...");
+        }, false);
+
+        // EVENTO MOUSEUP ------------------------------
+        canvas.addEventListener("mouseup",(evt)=>{     // detecta cuando deja de presionar
+           
+            x2 = evt.clientX;
+            y2 = evt.clientY;         
+            //console.log("dejo de dibujar");
+            //rectangulos[i].x= grisx;
+            if(select==true && rectangulos[posSelect].x != (grisx-pif)/separa){
+                rectangulos[posSelect].x= (grisx-pif)/separa;
+                generarRan= true;
+            }
+
+            pressed = select = false;
+        }, false);
+
+        // CONVERTIR pendiente a grados
+        function pendtoGrado(m){
+            return Math.atan(m)*180/Math.PI;
+        }
+        
+        function ToAngulo(rad){
+        	return rad*180/Math.PI;
+        }
+
+        // Retorna un número aleatorio entre min (incluido) y max (incluido)
+        function random(min, max) {
+            // return Math.random() * (max - min) + min + 1;
+            return Math.round(Math.random() * (max - min) + min);
+        }
+
+        function ToRad(angulo){
+            return angulo*Math.PI/180;
+        }
+
+        function valorAbs(x){
+        	if(x<0) return -x;
+        	return x;
+        }
+
+        function planoC(y){
+        	return HEIGHT-y;
+        }
+    </script>
+</body>
+</html>

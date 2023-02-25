@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>lanzamiento</title>
+	<style>
+		canvas{
+			display: block;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="canvas" width="700" height="550" style="border: solid #000;"></canvas>
+	ingrese angulo(0-90): <input type="text" id="angulo" placeholder="angulo 30">
+	ingrese velocidad: <input type="text" id="velocidad" placeholder="velocidad 100"><br>
+	<button onclick="lanzar()">lanzar</button>
+
+	<script type="text/javascript">
+		let canvas= document.querySelector("#canvas");
+		let ctx= canvas.getContext("2d");
+
+		// ciclo infinito
+        let tumae = setInterval(()=>{ pintarBola()},1);
+        console.log("atan(-2)= "+Math.atan(2)*180/Math.PI);
+        console.log("asin(-2)= "+Math.asin(0.761577311)*180/Math.PI);
+
+		WIDTH= 700; HEIGHT=550;
+		let vy= 0;
+        let vx= 0;
+        let angulo= 0.0;
+
+		class Bola{
+			constructor(x,y,r){
+				this.x= x;
+				this.y= y;
+				this.r= r;
+			}
+		}
+		class Linea{
+			constructor(x,y){
+				this.x= x;
+				this.y= y;
+			}
+		}
+		
+		bolaColision= new Bola(300,270,50);
+		bola= new Bola(0,0);
+		bolaAnterior= new Bola(-1,-1);
+		linea= new Linea(-5,0);
+		let gravedad= 9.8/1000;
+		let poner=0;
+		let derivada= 0.0;
+		let xPos= 0.0;
+		let y3=0,y4=0;
+
+        function lanzar(){
+        	poner= 0;
+        	gravedad= 9.8/100;
+        	bola.y= 0;
+        	bola.x= 0;
+        	velocidad= Number(document.querySelector("#velocidad").value);
+        	angulo= Number(document.querySelector("#angulo").value);
+        	rad= Math.PI*angulo/180;
+
+        	hipotenusaLinea= 20;
+        	linea.x= Math.cos(rad)*hipotenusaLinea;
+        	linea.y= Math.sin(rad)*hipotenusaLinea;
+
+        	// console.log("velocidad= "+velocidad);
+        	// console.log("angulo= "+angulo);
+        	// console.log("rad= "+rad);
+        	vy= Math.sin(rad)*velocidad/100;
+        	vx= Math.cos(rad)*velocidad/100;
+        	// console.log("vy= "+vy);
+        	// console.log("vx= "+vx+"\n---------------------------------");        	
+        }
+
+        function pintarBola(){
+        	canvas.width= canvas.width;
+
+        	bolaAnterior.x= bola.x;
+        	bolaAnterior.y= bola.y;
+
+        	for (let x = bolaColision.x-bolaColision.r; x <= bolaColision.x+bolaColision.r; x+=1) {
+        		ctx.beginPath();ctx.save();
+	            ctx.fillStyle = "#FF0000";  //color por dentro
+	            ctx.strokeStyle = "#FF0000";    // color prueba
+	            ctx.arc(x,planoC(Math.sqrt(bolaColision.r*bolaColision.r-(x-bolaColision.x)*(x-bolaColision.x))+bolaColision.y),1,0,2*Math.PI);
+	            ctx.arc(x,planoC(-Math.sqrt(bolaColision.r*bolaColision.r-(x-bolaColision.x)*(x-bolaColision.x))+bolaColision.y),1,0,2*Math.PI);
+	            ctx.fill();
+        	}
+
+        	//pintar circunferencia
+        	h=100, k=120, r=50;
+        	for (let x = h-r; x <= h+r; x+=0.01) {
+        		ctx.beginPath();ctx.save();
+	            ctx.fillStyle = "#FF0000";  //color por dentro
+	            ctx.strokeStyle = "#FF0000";    // color prueba
+	            ctx.arc(x,Math.sqrt(r*r-(x-h)*(x-h))+k,0.2,0,2*Math.PI);
+	            ctx.arc(x,-Math.sqrt(r*r-(x-h)*(x-h))+k,0.2,0,2*Math.PI);
+	            ctx.fill();
+        	}
+            j=120, L=130, n=60;
+            for (let x = j-n; x <= j+n; x+=0.01) {
+                ctx.beginPath();ctx.save();
+                ctx.fillStyle = "#FF0000";  //color por dentro
+                ctx.strokeStyle = "#FF0000";    // color prueba
+                ctx.arc(x,Math.sqrt(n*n-(x-j)*(x-j))+L,0.2,0,2*Math.PI);
+                ctx.arc(x,-Math.sqrt(n*n-(x-j)*(x-j))+L,0.2,0,2*Math.PI);
+                ctx.fill();
+            }
+
+        	//pintar circunferencia
+    //     	h=70, k=70, r=40;
+    //     	for (let x = h-r; x <= h+r; x+=0.01) {
+    //     		ctx.strokeStyle= "#000000";
+		  //       ctx.lineWidth = 0.05;   // grosor de la linea
+				// ctx.beginPath();
+				// ctx.moveTo(x, Math.sqrt(r*r-(x-h)*(x-h))+k);
+		  //       ctx.lineTo(x, -Math.sqrt(r*r-(x-h)*(x-h))+k);
+		  //       ctx.stroke();
+    //     	}
+
+
+   			ctx.strokeStyle= "#000000";
+	        ctx.lineWidth = 10;   // grosor de la linea
+			ctx.beginPath();
+			ctx.moveTo(0, HEIGHT);
+	        ctx.lineTo(linea.x, planoC(linea.y));
+	        ctx.stroke();
+
+			ctx.beginPath();ctx.save();
+            ctx.fillStyle = "#FF0000";  //color por dentro
+            ctx.strokeStyle = "#FF0000";    // color prueba
+            ctx.arc(bola.x,planoC(bola.y),5,0,2*Math.PI);
+            ctx.fill();
+        	
+			// console.log("vx= "+vx);
+			// console.log("vy= "+vy+"\n--------------------------------");
+
+			vy-= gravedad;
+			bola.x+= vx;
+        	bola.y+= vy;
+    		if(bola.y <= 0){
+    			bola.y-= vy;
+    			vy= -vy/1.1;
+    			vx= vx/1.1;
+    		}
+    		if(bola.x >= WIDTH || bola.x <= 0){
+    			bola.x-= vx;
+    			vx= -vx/1.1;
+    			vy= vy/1.1;
+    		}
+    		if(poner==0) if(bola.x >= bolaColision.x-bolaColision.r && bola.x <= bolaColision.x+bolaColision.r){
+    			//console.log("----entra----");
+    			let Cy= Math.sqrt(bolaColision.r*bolaColision.r-(bola.x-bolaColision.x)*(bola.x-bolaColision.x));
+ 		   		    			
+    			if(bola.y <= Cy+bolaColision.y && bola.y >= bolaColision.y){//colision con la parte de arriba
+    				//let derivada= (bola.x-bolaColision.x)/Cy;
+    				reboteEsfera(Cy);
+    				y3= derivada*(0-xPos)+planoC(Math.sqrt(bolaColision.r*bolaColision.r-(xPos-bolaColision.x)*(xPos-bolaColision.x))+bolaColision.y);
+					y4= derivada*(WIDTH-xPos)+planoC(Math.sqrt(bolaColision.r*bolaColision.r-(xPos-bolaColision.x)*(xPos-bolaColision.x))+bolaColision.y);
+    				gravedad=0;
+    				vx=0, vy=0;
+    				console.log("contacto D= "+derivada);
+    				
+    			}else if(bola.y >= -Cy+bolaColision.y && bola.y <= bolaColision.y){//colision con la parte de arriba
+    				//let derivada= -(bola.x-bolaColision.x)/Cy;
+    				reboteEsfera(Cy);
+    				y3= derivada*(0-xPos)+planoC(-Math.sqrt(bolaColision.r*bolaColision.r-(xPos-bolaColision.x)*(xPos-bolaColision.x))+bolaColision.y);
+					y4= derivada*(WIDTH-xPos)+planoC(-Math.sqrt(bolaColision.r*bolaColision.r-(xPos-bolaColision.x)*(xPos-bolaColision.x))+bolaColision.y);
+    				gravedad=0;
+    				vx=0, vy=0;
+    				console.log("contacto2 D= "+derivada);
+    				
+    			}
+    		}
+    		
+			ctx.strokeStyle= "#000000";
+	        ctx.lineWidth = 2;   // grosor de la linea
+			ctx.beginPath();
+			ctx.moveTo(0, y3);
+	        ctx.lineTo(poner, y4);
+	        ctx.stroke();
+        }
+
+        function angul(vy,vx){
+        	return Math.atan(vy/vx)*180/Math.PI;
+        }
+
+        function valorAbs(x){
+        	if(x<0) return -x;
+        	return x;
+        }
+
+        function planoC(y){
+        	return HEIGHT-y;
+        }
+
+        function reboteEsfera(Cy){
+        	poner= WIDTH;
+        	let m= (bola.y-bolaAnterior.y)/(bola.x-bolaAnterior.x);
+        	let y= bola.y;
+        	let x1= bola.x;
+        	let r= bolaColision.r;
+        	let h= bolaColision.x;
+        	let k= bolaColision.y;
+
+        	xPos= (-h-x1*m*m-k*m+m*y+Math.sqrt(-y*y+2*k*y+2*x1*m*y-2*h*m*y+2*x1*h*m*m+2*h*k*m+m*m*r*r+r*r-h*h*m*m-k*k-2*x1*k*m-x1*x1*m*m))/(-1-m*m);
+        	// let xNeg= -(-m*y+Math.sqrt(-y*y+2*k*y+2*x1*m*y-2*h*m*y+2*x1*h*m*m+2*h*k*m+m*m*r*r+r*r-h*h*m*m-k*k-2*x1*k*m-x1*x1*m*m)+h+k*m+x1*m*m)/(-m*m-1);
+
+        	if(bola.y <= Cy+bolaColision.y && bola.y >= bolaColision.y) derivada= (xPos-bolaColision.x)/Cy;
+        	else derivada= -(xPos-bolaColision.x)/Cy;
+
+        	
+        	// let y1= Dx*(1-bola.x)+bola.y;
+        	// let y2= Dx*(2-bola.x)+bola.y;
+        	// let A1= Math.atan(y2-y1)*180/Math.PI;
+
+        	// let ang= Math.atan(vy/vx)*180/Math.PI;
+        	// console.log(ang);
+        	// let vt= Math.sqrt(Math.pow(vx,2)+Math.pow(vy,2));
+        	// if(vx>0){
+        	// 	if(vy>0){
+        	// 		vy= Math.sin((ang+A1)*Math.PI/180)*vt;
+        	// 		vx= Math.cos((ang+A1)*Math.PI/180)*vt;
+        	// 	}else{
+        	// 		vy= Math.sin((ang+A1)*Math.PI/180)*vt;
+        	// 		vx= Math.cos((ang+A1)*Math.PI/180)*vt;
+        	// 	}
+        	// }else{
+        	// 	if(vy>0){
+        	// 		vy= Math.sin((ang+A1)*Math.PI/180)*vt;
+        	// 		vx= Math.cos((ang+A1)*Math.PI/180)*vt;
+        	// 	}else{
+        	// 		vy= Math.sin((ang+A1)*Math.PI/180)*vt;
+        	// 		vx= Math.cos((ang+A1)*Math.PI/180)*vt;
+        	// 	}
+        	// }
+        }
+	</script>
+</body>
+</html>

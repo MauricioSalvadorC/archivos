@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="icono.ico" />
+    <title>falling puzzle</title>
+    <style>
+        *{
+            /* overflow: hidden; */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        #boton{
+            margin-top: 30px;
+            padding: 10px;
+            font-size: 100px;
+            height: 150px;
+            width: 300px;
+        }
+        main{
+            background-color: rgb(21, 6, 224);
+            /* overflow: hidden; */
+            /* background: rgb(199,183,183);
+            background: radial-gradient(circle, rgba(199,183,183,1) 20%, rgba(0,0,0,0.8919051995798319) 100%); */
+            display: flex;
+            
+            min-height: 100vh;
+            padding: 0px 100px;
+            justify-content: space-evenly; /* center horizontal*/
+            /* align-items: center; center verticalmente */
+            /* flex-wrap: wrap; */ 
+        }
+        #canvas{
+            background-color: rgb(255, 255, 255);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <button id="boton" onclick="empezarGame()">start</button>
+        <canvas id="canvas" style="border: solid #000 1px;"></canvas>
+    </main>
+    
+    <script src="$.js"></script>
+    <script src="Alert.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
